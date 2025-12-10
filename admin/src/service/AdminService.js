@@ -1,7 +1,7 @@
 import http from "./httpService";
 
-const apiEndpoint = "http://localhost:5000";
-const prefix = "/admin";
+const apiEndpoint = process.env.REACT_APP_API_URL || "http://localhost:5001";
+const prefix = process.env.REACT_APP_ADMIN_PREFIX || "/admin";
 const adminEndpoint = apiEndpoint + prefix;
 
 async function login({ email, password }) {
