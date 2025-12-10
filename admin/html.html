@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>videojs-contrib-hls embed</title>
+
+  Uses the latest versions of video.js and videojs-http-streaming. To use
+  specific versions, please change the URLs to the form:
+
+  <link href="https://unpkg.com/video.js@6.7.1/dist/video-js.css" rel="stylesheet" />
+  <script src="https://unpkg.com/video.js@6.7.1/dist/video.js"></script>
+  <script src="https://unpkg.com/@videojs/http-streaming@0.9.0/dist/videojs-http-streaming.js"></script>
+
+  <link href="https://unpkg.com/video.js/dist/video-js.css" rel="stylesheet" />
+</head>
+
+<body>
+  <h1>Video.js Example Embed</h1>
+
+  <video-js id="my_video_1" class="vjs-default-skin" controls preload="auto" width="640" height="268">
+    <source src="https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8"
+      type="application/x-mpegURL" />
+  </video-js>
+  <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 5" shape-rendering="crispEdges">
+    <metadata>
+      <rdf:RDF>
+        <cc:Work>
+          <dc:format>image/svg+xml</dc:format>
+          <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+          <dc:title>Identicon</dc:title>
+          <dc:creator>
+            <cc:Agent>
+              <dc:title>Florian Körner</dc:title>
+            </cc:Agent>
+          </dc:creator>
+          <dc:source>https://github.com/dicebear/dicebear</dc:source>
+          <cc:license rdf:resource="https://creativecommons.org/publicdomain/zero/1.0/" />
+        </cc:Work>
+        <cc:License rdf:about="https://creativecommons.org/publicdomain/zero/1.0/">
+          <cc:permits rdf:resource="https://creativecommons.org/ns#Reproduction" />
+          <cc:permits rdf:resource="https://creativecommons.org/ns#Distribution" />
+          <cc:permits rdf:resource="https://creativecommons.org/ns#DerivativeWorks" />
+        </cc:License>
+      </rdf:RDF>
+    </metadata>
+    <mask id="avatarsRadiusMask">
+      <rect width="5" height="5" rx="0" ry="0" x="0" y="0" fill="#fff" />
+    </mask>
+    <g mask="url(#avatarsRadiusMask)">
+      <path d="M1 4h3v1H1V4z" fill="#FB8C00" />
+      <path d="M0 3h1v1H0V3zm4 0h1v1H4V3z" fill-rule="evenodd" fill="#FB8C00" />
+      <path d="M0 2h2v1H0V2zm3 0h2v1H3V2z" fill-rule="evenodd" fill="#FB8C00" />
+      <path d="M1 1h3v1H1V1z" fill="#FB8C00" />
+      <path d="M0 0h1v1H0V0zm4 0h1v1H4V0z" fill-rule="evenodd" fill="#FB8C00" />
+    </g>
+  </svg>
+  <img src="https://avatars.dicebear.com/api/micah/your-custom-seed.svg" alt="" srcset="" width="40" height="40">
+  <script src="https://unpkg.com/video.js/dist/video.js"></script>
+  <script src="https://unpkg.com/@videojs/http-streaming/dist/videojs-http-streaming.js"></script>
+
+  <script>
+    var player = videojs("my_video_1");
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,35 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    platform: linux/arm64/v8
+    volumes:
+      - ./database/data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_TCP_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ttlab
+      MYSQL_DATABASE: elearning2020
+    command:
+      [
+        'mysqld',
+        '--character-set-server=utf8mb4',
+        '--collation-server=utf8mb4_unicode_ci',
+      ]
+
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - 5000:5000

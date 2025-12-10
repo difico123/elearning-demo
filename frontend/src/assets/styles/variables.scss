@@ -1,0 +1,63 @@
+$grid-breakpoints: (
+    xs: 399px,
+    sm: 575px,
+    md: 767px,
+    lg: 991px,
+    xl: 1199px,
+    xxl: 1399px,
+);
+
+// z-index management
+$zIndex: (
+    menu: 1000,
+    popup: 2000,
+);
+
+$color-gray-01: #1b1b33;
+$color-gray-01-opacity-60: #1b1b3399;
+$color-gray-01-opacity-80: #1b1b33cc;
+$color-gray-02: #464962;
+$color-gray-03: #6d6f81;
+$color-gray-3-5: #8f919f;
+$color-gray-3-5-opacity-20: #8f919f33;
+$color-gray-03-opacity-50: #0c103380;
+$color-gray-04: #e7e7ec;
+$color-gray-05: #f5f5f9;
+$color-gray-05-opacity-60: #f5f5f999;
+$color-blue: #2573e9;
+$color-blue-extra: #202b3f;
+$color-light-blue: #639ff9;
+$color-dark-blue: #004ec3;
+$color-green: 	#7CFC00;
+
+$color-blue-extra: #020b3f;
+$color-black: #000000;
+$color-white: #ffffff;
+$color-white-opacity-30: #ffffff4d;
+$color-white-filter: invert(100%) sepia(100%) saturate(0%) hue-rotate(0deg)
+    brightness(200%) contrast(100%);
+$color-violet-03: #f1f5ff;
+$color-accent-violet-03: #f2f1ff;
+$color-violet-04: #d1e1ff;
+$color-blue-auth-banner: #2858dd;
+$color-red: #ff0e33;
+$color-red-01: #ff647c;
+$color-red-02: #ff0e33;
+$color-green-03: #fff1f4;
+$color-violet-new: #4057d0;
+$color-violet-new-1: #6d79e8;
+$color-violet-new-1-opacity-30: #6d79e84d;
+$color-violet-new-1-filter: invert(53%) sepia(75%) saturate(3983%) hue-rotate(215deg)
+    brightness(99%) contrast(83%);
+$color-violet-new-2: #918ffd;
+$color-yellow-01: #ffcf5c;
+$color-box-shadow-header: rgba(49, 51, 96, 0.1);
+
+$color-popper-box-shadow: rgba(34, 53, 89, 0.13);
+
+$margin-x-content-landing-page: 24px;
+$pale-blue: #e8fcff;
+$color-gray-opacity-30: #f9f9f98d;
+$color-violet-new-opacity-50: #4057d08d;
+$light-gray: #fafbfe;
+$yellow-orange: #FFAE42;

@@ -1,0 +1,26 @@
+{
+    "./src/*.ts{,x}": [
+        "eslint --fix",
+        "prettier --write"
+    ],
+    "./src/**/*.ts{,x}": [
+        "eslint --fix",
+        "prettier --write"
+    ],
+    "./src/**/*.vue": [
+        "eslint --fix",
+        "prettier --write"
+    ],
+    "./src/**/*.js": [
+        "eslint --fix",
+        "prettier --write"
+    ],
+    "./src/**/*.css": [
+        "eslint --fix",
+        "prettier --write"
+    ],
+    "./src/**/*.scss": [
+        "eslint --fix",
+        "prettier --write"
+    ]
+}

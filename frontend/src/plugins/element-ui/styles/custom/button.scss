@@ -1,0 +1,31 @@
+@import '../../../../assets/styles/variables';
+
+.el-button {
+    background-color: $color-white !important;
+    border-color: $color-gray-04 !important;
+    border-radius: 6px !important;
+    color: $color-gray-02 !important;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 24px;
+
+    &:hover {
+        background-color: $color-white !important;
+        border-color: $color-gray-04 !important;
+        color: $color-gray-02 !important;
+    }
+
+    &--primary {
+        background-color: $color-blue !important;
+        border-color: $color-blue !important;
+        border-radius: 6px !important;
+        color: $color-white !important;
+
+        &:focus,
+        &:hover {
+            background-color: $color-dark-blue !important;
+            border-color: $color-dark-blue !important;
+            color: $color-white !important;
+        }
+    }
+}

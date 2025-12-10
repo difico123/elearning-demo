@@ -1,0 +1,15 @@
+@import '../../../../assets/styles/variables';
+
+.el-input__wrapper {
+    background-color: $color-gray-05;
+    box-shadow: none;
+
+    &:hover {
+        box-shadow: 0 0 0 1px $color-blue;
+    }
+
+    &:focus {
+        box-shadow: 0 0 0 1px $color-blue;
+        background-color: $color-violet-03;
+    }
+}
