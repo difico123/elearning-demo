@@ -51,7 +51,7 @@
                 </label>
                 <editor
                     v-model="selectedTopic.content"
-                    api-key="ztdxquej3s6xf8bvkjxffvizlccpvno0r18e89gidaslllug"
+                    api-key="500pb1ogequk30ef9qpcv5rw55vqb8xlkonwp9enq1crafq2"
                     :init="toolbarInit"
                 />
             </div>
@@ -91,7 +91,9 @@ import Editor from '@tinymce/tinymce-vue';
     components: { Editor },
 })
 export default class TopicFormPopup extends Vue {
-    video: '';
+    video: ''; 
+    selectedTopic: ITopicData = {};
+
     get toolbarInit() {
         return {
             plugins:
@@ -114,11 +116,39 @@ export default class TopicFormPopup extends Vue {
         return courseModule.topicFormPopupMode;
     }
 
-    isCreate = this.popupMode === 'create';
+    get isCreate() {
+        return this.popupMode === 'create';
+    }
 
-    selectedTopic: ITopicData = this.isCreate
-        ? {}
-        : Object.assign({}, courseModule.selectedTopic);
+    mounted() {
+        // Watch for popup visibility changes
+        this.$watch(
+            () => this.isShowTopicFormPopup,
+            (newVal: boolean) => {
+                if (newVal) {
+                    this.updateSelectedTopic();
+                }
+            }
+        );
+        // Watch for mode changes
+        this.$watch(
+            () => this.popupMode,
+            () => {
+                if (this.isShowTopicFormPopup) {
+                    this.updateSelectedTopic();
+                }
+            }
+        );
+    }
+
+    updateSelectedTopic() {
+        if (this.isCreate) {
+            this.selectedTopic = {};
+            this.video = '';
+        } else {
+            this.selectedTopic = Object.assign({}, courseModule.selectedTopic);
+        }
+    }
 
     closeTopicFormPopup() {
         courseModule.toggleShowTopicFormPopup(false);
@@ -197,10 +227,18 @@ export default class TopicFormPopup extends Vue {
                 showErrorNotificationFunction(res[0].message);
             }
         } else {
+            const topicId = this.selectedTopic.id;
+            if (!topicId) {
+                showErrorNotificationFunction(
+                    this.$t('course.errors.topic.editTopic'),
+                );
+                commonModule.setLoadingIndicator(false);
+                return;
+            }
             const response = await updateTopic(
                 formData,
                 courseId,
-                this.selectedTopic.id as number,
+                topicId as number,
             );
             if (response.success) {
                 showSuccessNotificationFunction(

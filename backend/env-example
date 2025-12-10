@@ -31,7 +31,3 @@ REDIS_PASSWORD=1s6ybIWw2r5E9PMvtXrHaY4wPRCNP8Xf
 
 STRIPE_API_KEY=sk_test_your-stripe-api-key
 
-ELASTICSEARCH_NODEz=https://elearningz.es.us-central1.gcp.cloud.es.io
-ELASTICSEARCH_USERNAMEz=elastic
-ELASTICSEARCH_PASSWORDz=vT8c3FiTtLCtbklYGlzMle66
-
