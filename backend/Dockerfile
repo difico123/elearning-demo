@@ -1,9 +1,19 @@
-FROM node:16.18.0
+FROM node:18-alpine
+
+# Configure npm for better performance and reliability
+RUN npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000
 
 RUN npm i -g @nestjs/cli typescript ts-node
 
 COPY package*.json /tmp/app/
-RUN cd /tmp/app && npm install --legacy-peer-deps
+# Install with retry logic and better error handling
+RUN cd /tmp/app && \
+    npm install --legacy-peer-deps --prefer-offline --no-audit || \
+    (sleep 5 && npm install --legacy-peer-deps --prefer-offline --no-audit) || \
+    (sleep 10 && npm install --legacy-peer-deps --prefer-offline --no-audit)
 
 COPY . /usr/src/app
 RUN cp -a /tmp/app/node_modules /usr/src/app

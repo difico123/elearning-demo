@@ -1,7 +1,13 @@
 # Build stage
-FROM node:16-alpine as build-stage
+FROM node:18-alpine as build-stage
 
 WORKDIR /app
+
+# Configure npm for better performance
+RUN npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000
 
 # Build argument for API URL
 ARG VUE_APP_API_URL
@@ -11,8 +17,11 @@ ENV VUE_APP_API_URL=$VUE_APP_API_URL
 COPY package*.json ./
 COPY yarn.lock* ./
 
-# Install dependencies
-RUN npm install || yarn install
+# Install dependencies with retry logic
+RUN npm install --prefer-offline --no-audit || \
+    (sleep 5 && npm install --prefer-offline --no-audit) || \
+    (sleep 10 && npm install --prefer-offline --no-audit) || \
+    (yarn install --prefer-offline --network-timeout 120000)
 
 # Copy source code
 COPY . .
