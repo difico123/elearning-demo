@@ -91,6 +91,10 @@ export default class CourseSidebar extends Vue {
 
     async refreshInstructorQuizDetail() {
         const courseId = +this.$route.params.courseId;
+        if (!this.topicId || this.topicId <= 0) {
+            courseModule.setQuizList([]);
+            return;
+        }
         commonModule.setLoadingIndicator(true);
         const response = await getQuizList(courseId, this.topicId as number);
         if (response?.success) {
@@ -109,8 +113,13 @@ export default class CourseSidebar extends Vue {
         commonModule.setLoadingIndicator(true);
         window.addEventListener('resize', this.showFullScreenOnMobile);
         this.showFullScreenOnMobile();
-        courseModule.setTopicId(courseModule.topicList[0]?.id || 1);
-        await this.refreshInstructorQuizDetail();
+        const firstTopicId = courseModule.topicList[0]?.id || -1;
+        courseModule.setTopicId(firstTopicId);
+        if (firstTopicId > 0) {
+            await this.refreshInstructorQuizDetail();
+        } else {
+            courseModule.setQuizList([]);
+        }
         courseModule.setAddingQuiz(false);
         commonModule.setLoadingIndicator(false);
     }

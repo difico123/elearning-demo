@@ -172,6 +172,7 @@ export const course = {
         form: {
             duration: '{time} minutes',
             mark: '{mark} points',
+            isCorrect: 'Correct answer',
             addQuiz: 'Add a quiz',
             addQuestion: 'Add a question',
             addAnswer: 'Add an answer',
@@ -181,12 +182,14 @@ export const course = {
             startTime: 'Start time',
             save: 'Save',
             cancel: 'Cancel',
+            editQuiz: 'Edit Quiz',
         },
         field: {
             addQuestion: 'Question title',
             addAnswer: 'Answer title',
             addQuestionPlaceholder: 'Please enter a question name',
             question: 'Question',
+            answer: 'Answer',
         },
         leaderboard: 'Leaderboard',
         submitQuiz: 'Submit Answers',

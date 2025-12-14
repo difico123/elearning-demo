@@ -268,7 +268,23 @@ export async function updateQuiz(
 export async function createQuiz(
     courseId: number,
     topicId: number,
-    params: ICreateQuizParams,
+    params: {
+        id: number;
+        name: string;
+        startTime: string;
+        duration: number;
+        shown?: boolean;
+        questionList: Array<{
+            id?: number;
+            name: string;
+            mark: number;
+            answerList: Array<{
+                id?: number;
+                content: string;
+                isCorrect: boolean;
+            }>;
+        }>;
+    },
 ): Promise<IAxiosDefaultResponse<IQuizDetail>> {
     return axios
         .post(`${BE_URL}/quiz/${courseId}/${topicId}`, params, {
@@ -287,18 +303,13 @@ export async function createQuiz(
 export async function deleteQuiz(
     courseId: number,
     quizId: number,
-    sourceId: number,
-    type: 'question' | 'quiz' | 'answer',
 ): Promise<IAxiosDefaultResponse<IQuizDetail>> {
     return axios
-        .delete(
-            `${BE_URL}/quiz/${courseId}/${quizId}?type=${type}&sourceId=${sourceId}`,
-            {
-                headers: {
-                    Authorization: 'Bearer ' + localStorageTokenService.getAccessToken(),
-                },
+        .delete(`${BE_URL}/quiz/${courseId}/${quizId}`, {
+            headers: {
+                Authorization: 'Bearer ' + localStorageTokenService.getAccessToken(),
             },
-        )
+        })
         .then((res) => {
             return res.data;
         })
@@ -306,28 +317,31 @@ export async function deleteQuiz(
             return error.response.data;
         });
 }
-export async function editQuiz(
+export async function updateQuizBulk(
     courseId: number,
-    sourceId: number,
     quizId: number,
-    type: 'question' | 'quiz' | 'answer' | 'addQuestion' | 'addAnswer',
-    data: { question?: IQuestion; answer?: IAnswer; quiz?: IQuiz },
+    data: {
+        quiz: { name: string; duration: string; shown?: boolean };
+        questions: Array<{
+            id?: number;
+            name: string;
+            mark: number;
+            answerList: Array<{
+                id?: number;
+                content: string;
+                isCorrect: boolean;
+            }>;
+        }>;
+        deletedQuestionIds?: number[];
+        deletedAnswerIds?: number[];
+    },
 ): Promise<IAxiosDefaultResponse<IQuizDetail>> {
-    const { question, answer, quiz } = data;
     return axios
-        .put(
-            `${BE_URL}/quiz/${courseId}/${quizId}?type=${type}&sourceId=${sourceId}`,
-            {
-                answer,
-                question,
-                quiz,
+        .put(`${BE_URL}/quiz/${courseId}/${quizId}`, data, {
+            headers: {
+                Authorization: 'Bearer ' + localStorageTokenService.getAccessToken(),
             },
-            {
-                headers: {
-                    Authorization: 'Bearer ' + localStorageTokenService.getAccessToken(),
-                },
-            },
-        )
+        })
         .then((res) => {
             return res.data;
         })

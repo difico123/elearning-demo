@@ -97,16 +97,20 @@ export default class CourseDetail extends Vue {
         if (response.success) {
             courseModule.setTopicList(response?.data?.items || []);
             if (response?.data?.items && response?.data?.items.length > 0) {
-                courseModule.setSelectedTopic(response.data.items[0]);
-                courseModule.setCurrentChatTopicId(response.data.items[0]?.id || -1);
+                const firstTopic = response.data.items[0];
+                courseModule.setSelectedTopic(firstTopic);
+                courseModule.setTopicId(firstTopic.id as number);
+                courseModule.setCurrentChatTopicId(firstTopic?.id || -1);
             } else {
                 courseModule.setSelectedTopicObject({});
+                courseModule.setTopicId(-1);
             }
         } else {
             let res = response?.errors || [
                 { message: this.$t('course.errors.getTopicListError') },
             ];
             courseModule.setTopicList([]);
+            courseModule.setTopicId(-1);
             showErrorNotificationFunction(res[0].message);
         }
     }
