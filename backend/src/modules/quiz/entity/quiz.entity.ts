@@ -18,6 +18,10 @@ export class Quiz {
   @Column({ nullable: false })
   topicId: number;
 
+  @ApiProperty({ example: 1 })
+  @Column({ nullable: false })
+  courseId: number;
+
   @ApiProperty({ example: '123abc' })
   @Column({ length: 255, nullable: false })
   name: string;

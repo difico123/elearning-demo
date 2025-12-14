@@ -12,10 +12,10 @@ import {
   UsePipes,
   Headers,
   Put,
-  Query,
   Delete,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
@@ -31,12 +31,10 @@ import {
 import { SuccessResponse } from 'src/common/helpers/api.response';
 import {
   BulkQuizInsertDto,
+  BulkQuizUpdateDto,
   CreateQuizDto,
-  IEditQuizDto,
   IEditQuizParam,
-  IQueryEditDto,
   IQuizParam,
-  IUpdateQuizDto,
   QuizListResponseDto,
 } from './dto/dto';
 import { QuizService } from './service/quiz.service';
@@ -49,6 +47,7 @@ import { Answer } from './entity/answer.entity';
 import { Question } from './entity/question.entity';
 import { IUserJwt } from 'src/common/interfaces';
 import { Quiz } from './entity/quiz.entity';
+import { TopicService } from '../topics/service/topic.service';
 
 @ApiTags('Quiz')
 @Controller('quiz')
@@ -56,17 +55,17 @@ export class QuizController {
   constructor(
     private readonly quizService: QuizService,
     private readonly userQuiz: UserQuizService,
+    private readonly topicService: TopicService,
   ) {}
 
   @Get('rank/:courseId')
   async rankCourses(
     @Res() res: Response,
     @Param() param: { courseId: string },
-    @Query() query: IQueryEditDto,
   ) {
     const { courseId } = param;
 
-    let courseRank = await this.quizService.rankCourse(+courseId);
+    const courseRank = await this.quizService.rankCourse(+courseId);
     return res.status(HttpStatus.OK).json(new SuccessResponse(courseRank));
   }
 
@@ -81,9 +80,18 @@ export class QuizController {
     @Student() student: UserCourse,
     @Headers('host') host: Headers,
   ) {
-    const { topicId } = param;
+    const { topicId, courseId } = param;
 
-    let quizes = await this.quizService.getBulks(+topicId, student?.userId);
+    const topic = await this.topicService.existTopic(+topicId);
+    if (topic.courseId !== +courseId) {
+      throw new ForbiddenException('topic does not belong to course');
+    }
+
+    let quizes = await this.quizService.getBulks(
+      +topicId,
+      student?.userId,
+      +courseId,
+    );
 
     quizes = quizes.map((item) => {
       const { startTime } = item;
@@ -120,132 +128,58 @@ export class QuizController {
     @Param() param: IQuizParam,
     @Body() body: BulkQuizInsertDto,
   ) {
-    const { topicId } = param;
+    const { topicId, courseId } = param;
 
-    let quiz = await this.quizService.saveQuizBulk(body, +topicId);
+    const topic = await this.topicService.existTopic(+topicId);
+    if (topic.courseId !== +courseId) {
+      throw new ForbiddenException('topic does not belong to course');
+    }
+
+    const quiz = await this.quizService.saveQuizBulk(body, +topicId);
 
     return res.status(HttpStatus.OK).json(new SuccessResponse(quiz));
   }
 
-  @Put(':courseId/:quizId')
+  @Put('/:courseId/:quizId')
   @InstructorCourseAuth()
   @UsePipes(
     ...validation(
       { key: 'updateQuizParamSchema', type: 'param' },
-      { key: 'editQuizQuerySchema', type: 'query' },
+      { key: 'bulkQuizUpdateSchema', type: 'body' },
     ),
   )
   async updateQuiz(
     @Res() res: Response,
     @Instructor() instructor: Course,
     @Param() param: IEditQuizParam,
-    @Body() body: IUpdateQuizDto,
-    @Query() query: IQueryEditDto,
+    @Body() body: BulkQuizUpdateDto,
+    @Req() req: Request,
   ) {
-    const { sourceId, type } = query;
-    let { answer, question, quiz } = body;
-
-    let { quizId } = param;
-
-    let quizExist = await this.quizService.existQuiz(+quizId);
-    if (!quizExist) {
-      throw new NotFoundException('not found quiz');
-    }
-
-    let result: any;
-
-    if (type === 'answer' && !!answer) {
-      if (quizExist.isEdit) {
-        throw new BadRequestException('can not editing');
-      }
-
-      result = await this.quizService.updateAnswerOnly(sourceId, answer);
-    } else if (type === 'question' && !!question) {
-      if (quizExist.isEdit) {
-        throw new BadRequestException('can not editing');
-      }
-
-      result = await this.quizService.updateQuestionOnly(sourceId, question);
-    } else if (type === 'quiz' && !!quiz) {
-      let isEdit = false;
-      if (quiz.shown && !quizExist.isEdit) {
-        isEdit = true;
-      } else if (quizExist.isEdit) {
-        isEdit = true;
-      }
-      let newQuiz: Partial<Quiz> = {
-        ...quiz,
-        isEdit,
-      };
-
-      result = await this.quizService.updateQuizOnly(+quizId, newQuiz);
-    } else if (type === 'addAnswer' && !!answer) {
-      let newAnswer: Partial<Answer> = {
-        questionId: sourceId,
-        content: answer.content,
-        isCorrect: answer.isCorrect,
-      };
-      result = await this.quizService.saveAnswer(newAnswer);
-    } else if (type === 'addQuestion' && !!question) {
-      let newQuestion: Partial<Question> = {
-        quizId: sourceId,
-        name: question.name,
-        mark: question.mark,
-      };
-      result = await this.quizService.saveQuestion(newQuestion);
-    }
-
-    return res.status(HttpStatus.OK).json(
-      new SuccessResponse({
-        result,
-      }),
+    const { quizId, courseId } = param;
+    const result = await this.quizService.updateQuizBulk(
+      +quizId,
+      +courseId,
+      body,
     );
+    return res.status(HttpStatus.OK).json(new SuccessResponse(result));
   }
 
   @Delete(':courseId/:quizId')
   @InstructorCourseAuth()
-  @UsePipes(
-    ...validation(
-      { key: 'updateQuizParamSchema', type: 'param' },
-      { key: 'editQuizQuerySchema', type: 'query' },
-    ),
-  )
+  @UsePipes(...validation({ key: 'updateQuizParamSchema', type: 'param' }))
   async deleteQuiz(
     @Res() res: Response,
     @Instructor() instructor: Course,
     @Param() param: IEditQuizParam,
-    @Query() query: IQueryEditDto,
   ) {
-    const { sourceId, type } = query;
-    let { quizId } = param;
-    let quizExist = await this.quizService.existQuiz(+quizId);
-    if (!quizExist) {
-      throw new NotFoundException('not found quiz');
+    const { quizId, courseId } = param;
+    const quizExist = await this.quizService.existQuiz(+quizId);
+    const topic = await this.topicService.existTopic(quizExist.topicId);
+    if (topic.courseId !== +courseId) {
+      throw new ForbiddenException('quiz does not belong to course');
     }
-    let result: any;
-
-    switch (type) {
-      case 'answer': {
-        if (quizExist.isEdit) {
-          throw new NotFoundException('can not delete answer');
-        }
-        result = await this.quizService.deleteAnswer(sourceId);
-        break;
-      }
-      case 'question': {
-        if (quizExist.isEdit) {
-          throw new NotFoundException('can not delete question');
-        }
-        result = await this.quizService.deleteQuestion(sourceId);
-        break;
-      }
-      case 'quiz': {
-        result = await this.quizService.deleteQuiz(sourceId);
-        await this.userQuiz.deleteQuizByQuizId(sourceId);
-        break;
-      }
-    }
-
+    const result = await this.quizService.deleteQuiz(+quizId);
+    await this.userQuiz.deleteQuizByQuizId(+quizId);
     return res.status(HttpStatus.OK).json(new SuccessResponse(result));
   }
 }

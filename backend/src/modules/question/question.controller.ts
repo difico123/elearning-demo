@@ -50,15 +50,4 @@ import { Course } from '../course/entity/course.entity';
 @Controller('question')
 export class QuestionController {
   constructor(private readonly answerService: AnswerService) {}
-
-  @Post('/:courseId/:quizId')
-  @InstructorCourseAuth()
-  async createTopic(
-    @Res() res: Response,
-    @Instructor() instructor: Course,
-    @Param() param: {},
-    @Body() body: {},
-  ) {
-    return res.status(HttpStatus.OK).json(new SuccessResponse());
-  }
 }

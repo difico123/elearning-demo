@@ -13,6 +13,7 @@ import { Question } from './entity/question.entity';
 import { Answer } from './entity/answer.entity';
 import { UserAnswerModule } from '../user-answer/user-answer.module';
 import { UserQuizModule } from '../user-quiz/user-quiz.module';
+import { TopicModule } from '../topics/topic.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Quiz, Question, Answer]),
@@ -24,6 +25,7 @@ import { UserQuizModule } from '../user-quiz/user-quiz.module';
     QuestionModule,
     AnswerModule,
     UserQuizModule,
+    TopicModule,
   ],
   controllers: [QuizController],
   providers: [QuizService],
