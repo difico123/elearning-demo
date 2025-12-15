@@ -7,41 +7,17 @@
             <img src="@/assets/course/icons/plus.svg" width="18" alt="" />
             <span>{{ $t('course.quiz.form.addQuiz') }}</span>
         </div>
-        <div class="add-quiz-area d-flex flex-column gap-4" v-if="isAddingQuiz">
-            <div class="field-wrapper">
-                <div class="label pb-3">{{ $t('course.quiz.form.title') }}:</div>
-                <BaseInputText
-                    :placeholder="$t('course.quiz.form.title')"
-                    v-model:value="newQuizForm.name"
-                    autocomplete="off"
-                />
-            </div>
-            <InstructorQuiz :quiz="newQuizForm" :isShowDetail="true" />
-
-            <div class="action-buttons d-flex flex-row gap-2">
-                <div @click="handleSaveAddQuiz" class="button save-add-quiz">
-                    {{ $t('course.quiz.form.save') }}
-                </div>
-                <div @click="handleCancelAddQuiz" class="button cancel-add-quiz">
-                    {{ $t('course.quiz.form.cancel') }}
-                </div>
-            </div>
-        </div>
 
         <div class="quiz-card" v-for="quiz in quizList" :key="quiz.id">
             <InstructorQuiz
                 :quiz="quiz"
                 isShowTitle="true"
                 :isEdit="quiz.isEdit"
-                @delete-answer="handleDeleteAnswer"
-                @delete-question="handleDeleteQuestion"
-                @delete-quiz="handleDeleteQuiz"
                 @toggle-show-quiz="handleToggleQuiz"
-                @edit-quiz="handleEditQuiz"
-                @edit-answer="handleEditAnswer"
-                @edit-question="handleEditQuestion"
+                @edit-quiz="handleOpenQuizEditPopup"
             />
         </div>
+        <QuizEditPopup ref="quizEditPopup" @save="handleSaveQuizEdit" />
     </div>
 </template>
 
@@ -49,35 +25,30 @@
 import { SystemRole } from '@/common/constants';
 import { Options, Vue } from 'vue-class-component';
 import {
-    IAnswer,
     IAnswerDetail,
-    IQuestion,
     IQuestionDetail,
     IQuizDetail,
 } from '../../constants/course.interfaces';
 import { courseModule } from '../../store/course.store';
 import InstructorQuiz from '../quiz-detail/instructor/InstructorQuiz.vue';
+import QuizEditPopup from './QuizEditPopup.vue';
 import { commonModule } from '@/modules/common/store/common.store';
 import moment from 'moment';
-import { createQuiz, deleteQuiz, editQuiz, getQuizList } from '../../services/course';
+import {
+    createQuiz,
+    deleteQuiz,
+    getQuizList,
+    updateQuizBulk,
+} from '../../services/course';
 import {
     showErrorNotificationFunction,
     showSuccessNotificationFunction,
 } from '@/common/helpers';
 @Options({
-    components: { InstructorQuiz },
+    components: { InstructorQuiz, QuizEditPopup },
 })
 export default class InstructorQuizDetail extends Vue {
     SystemRole = SystemRole;
-
-    newQuizForm = {
-        name: '',
-        startTime: '',
-        isEdit: false,
-        duration: 0,
-        topicId: this.topicId,
-        questionList: [],
-    };
 
     get topicId() {
         return courseModule.topicId;
@@ -87,23 +58,12 @@ export default class InstructorQuizDetail extends Vue {
         return courseModule.quizList;
     }
 
-    get isAddingQuiz() {
-        return courseModule.isAddingQuiz;
-    }
-
-    resetNewQuiz() {
-        this.newQuizForm = {
-            name: '',
-            startTime: '',
-            isEdit: false,
-            duration: 0,
-            topicId: this.topicId,
-            questionList: [],
-        };
-    }
-
     async getQuizList() {
         const courseId = +this.$route.params.courseId;
+        if (!this.topicId || this.topicId <= 0) {
+            courseModule.setQuizList([]);
+            return;
+        }
         const response = await getQuizList(courseId, this.topicId as number);
         if (response?.success) {
             courseModule.setQuizList(response?.data?.items || []);
@@ -116,261 +76,154 @@ export default class InstructorQuizDetail extends Vue {
         }
     }
     handleAddQuizButton() {
-        courseModule.setAddingQuiz(true);
-    }
-
-    async handleSaveAddQuiz() {
-        commonModule.setLoadingIndicator(true);
-        const courseId = +this.$route.params.courseId;
-        const params = {
-            ...this.newQuizForm,
-            startTime: moment(this.newQuizForm.startTime).format('YYYY-MM-DD HH:mm:ss'),
-            duration: `${this.newQuizForm.duration}`,
-        };
-
-        const response = await createQuiz(courseId, this.topicId, params);
-        if (response?.success) {
-            showSuccessNotificationFunction(this.$t('course.success.quiz.createQuiz'));
-            courseModule.setQuizList([...this.quizList, response.data || {}]);
-        } else {
-            let res = response?.errors || [
-                { message: this.$t('course.errors.createNewQuizError') },
-            ];
-            showErrorNotificationFunction(res[0].message);
-        }
-        this.resetNewQuiz();
-        courseModule.setAddingQuiz(false);
-        commonModule.setLoadingIndicator(false);
-    }
-
-    handleCancelAddQuiz() {
-        this.resetNewQuiz();
-        courseModule.setAddingQuiz(false);
-    }
-
-    async handleDeleteAnswer(answer: IAnswerDetail, quizId: number) {
-        if (answer?.id) {
-            let response = await deleteQuiz(
-                +this.$route.params.courseId,
-                quizId,
-                answer.id,
-                'answer',
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.updateQuiz'),
-                );
-            } else {
-                let res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
-            }
-        }
-    }
-    async handleDeleteQuestion(question: IQuestionDetail, quizId: number) {
-        if (question?.id) {
-            let response = await deleteQuiz(
-                +this.$route.params.courseId,
-                quizId,
-                question.id,
-                'question',
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.updateQuiz'),
-                );
-            } else {
-                let res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
-            }
-        }
-    }
-
-    async handleDeleteQuiz(quiz: IQuizDetail, quizId: number) {
-        if (quiz?.id) {
-            let quizes = this.quizList;
-            let quizIndex = this.quizList.findIndex((item) => item.id === quiz.id);
-            quizes.splice(quizIndex, 1);
-            courseModule.setQuizList([...quizes]);
-
-            let response = await deleteQuiz(
-                +this.$route.params.courseId,
-                quizId,
-                quiz.id,
-                'quiz',
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.deleteQuiz'),
-                );
-            } else {
-                let res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
-            }
+        const popup = this.$refs.quizEditPopup as any;
+        if (popup) {
+            popup.openPopup(null, +this.$route.params.courseId);
         }
     }
 
     async handleToggleQuiz(quiz: IQuizDetail) {
         if (quiz?.id) {
-            let response = await editQuiz(
+            // For toggle shown, we still need to update just the quiz meta
+            // We'll use bulk update with all existing questions
+            const questions = (quiz.questionList || []).map((q) => ({
+                id: q.id,
+                name: q.name,
+                mark: q.mark,
+                answerList: (q.answerList || []).map((a) => ({
+                    id: a.id,
+                    content: a.content,
+                    isCorrect: a.isCorrect,
+                })),
+            }));
+
+            const payload = {
+                quiz: {
+                    name: quiz.name || '',
+                    duration: quiz.duration || '0',
+                    shown: quiz.shown,
+                },
+                questions: questions,
+                deletedQuestionIds: [],
+                deletedAnswerIds: [],
+            };
+
+            // Note: We need to update shown separately since it's not in the bulk DTO
+            // For now, we'll keep the old endpoint for this simple toggle
+            // Or we can add shown to the bulk DTO if needed
+            const response = await updateQuizBulk(
                 +this.$route.params.courseId,
                 quiz.id,
-                quiz.id,
-                'quiz',
-                {
+                payload,
+            );
+            if (response?.success) {
+                showSuccessNotificationFunction(
+                    this.$t('course.success.quiz.updateQuiz'),
+                );
+            } else {
+                const res = response?.errors || [
+                    { message: this.$t('course.errors.quiz.updateTopic') },
+                ];
+                showErrorNotificationFunction(res[0].message);
+            }
+        }
+        this.getQuizList();
+    }
+
+    handleOpenQuizEditPopup(quiz: IQuizDetail) {
+        const popup = this.$refs.quizEditPopup as any;
+        if (popup) {
+            popup.openPopup(quiz, +this.$route.params.courseId);
+        }
+    }
+
+    async handleSaveQuizEdit(data: {
+        quizId: number;
+        courseId: number;
+        quiz: { name: string; duration: string };
+        questions: Array<IQuestionDetail>;
+        deletedQuestions: number[];
+        deletedAnswers: number[];
+    }) {
+        commonModule.setLoadingIndicator(true);
+        try {
+            if (!this.topicId || this.topicId <= 0) {
+                showErrorNotificationFunction(this.$t('course.errors.getTopicListError'));
+                commonModule.setLoadingIndicator(false);
+                return;
+            }
+
+            // Build questionList for create/update
+            const questionList = (data.questions || []).map((q) => ({
+                name: q.name || '',
+                mark: q.mark || 0,
+                answerList: (q.answerList || []).map((a) => ({
+                    content: a.content || '',
+                    isCorrect: a.isCorrect || false,
+                })),
+            }));
+
+            if (data.quizId === 0) {
+                // Create mode
+                const params = {
+                    id: 0,
+                    name: data.quiz.name || '',
+                    startTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                    duration: +data.quiz.duration || 0,
+                    shown: false,
+                    questionList: questionList,
+                };
+
+                const response = await createQuiz(data.courseId, this.topicId, params);
+                if (response?.success) {
+                    showSuccessNotificationFunction(
+                        this.$t('course.success.quiz.createQuiz'),
+                    );
+                    await this.getQuizList();
+                } else {
+                    const errors = response?.errors || [
+                        { message: this.$t('course.errors.createNewQuizError') },
+                    ];
+                    showErrorNotificationFunction(errors[0].message);
+                }
+            } else {
+                // Edit mode
+                const payload = {
                     quiz: {
-                        shown: quiz.shown,
+                        name: data.quiz.name,
+                        duration: data.quiz.duration,
                     },
-                },
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.updateQuiz'),
-                );
-            } else {
-                let res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
-            }
-        }
-        this.getQuizList();
-    }
+                    questions: (data.questions || []).map((q) => ({
+                        id: q.id,
+                        name: q.name,
+                        mark: q.mark,
+                        answerList: (q.answerList || []).map((a) => ({
+                            id: a.id,
+                            content: a.content,
+                            isCorrect: a.isCorrect,
+                        })),
+                    })),
+                    deletedQuestionIds: data.deletedQuestions || [],
+                    deletedAnswerIds: data.deletedAnswers || [],
+                };
 
-    async handleEditQuiz(quiz: IQuizDetail) {
-        if (quiz?.id) {
-            console.log('coursexzxzczx', +this.$route.params.courseId);
-
-            let response = await editQuiz(
-                +this.$route.params.courseId,
-                quiz.id,
-                quiz.id,
-                'quiz',
-                {
-                    quiz: {
-                        name: quiz.name,
-                        duration: quiz.duration,
-                    },
-                },
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.updateQuiz'),
-                );
-            } else {
-                let res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
+                const response = await updateQuizBulk(data.courseId, data.quizId, payload);
+                if (response?.success) {
+                    showSuccessNotificationFunction(
+                        this.$t('course.success.quiz.updateQuiz'),
+                    );
+                    await this.getQuizList();
+                } else {
+                    const errors = response?.errors || [
+                        { message: this.$t('course.errors.quiz.updateTopic') },
+                    ];
+                    showErrorNotificationFunction(errors[0].message);
+                }
             }
+        } catch (error) {
+            showErrorNotificationFunction(this.$t('course.errors.quiz.updateTopic'));
         }
-    }
-
-    async handleEditAnswer(answer: IAnswer, questionId: number, quizId: number) {
-        if (answer?.id) {
-            let response = await editQuiz(
-                +this.$route.params.courseId,
-                answer.id,
-                quizId,
-                'answer',
-                {
-                    answer: {
-                        content: answer.content,
-                        isCorrect: answer.isCorrect,
-                    },
-                },
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.updateQuiz'),
-                );
-            } else {
-                let res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
-            }
-        } else if (questionId) {
-            let response = await editQuiz(
-                +this.$route.params.courseId,
-                questionId,
-                quizId,
-                'addAnswer',
-                {
-                    answer: {
-                        content: answer.content,
-                        isCorrect: answer.isCorrect,
-                    },
-                },
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.updateQuiz'),
-                );
-            } else {
-                let res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
-            }
-        }
-        this.getQuizList();
-    }
-
-    async handleEditQuestion(question: IQuestion, quizId: number) {
-        if (question?.id) {
-            let response = await editQuiz(
-                +this.$route.params.courseId,
-                question.id,
-                quizId,
-                'question',
-                {
-                    question: {
-                        name: question.name,
-                        mark: question.mark,
-                    },
-                },
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.updateQuiz'),
-                );
-            } else {
-                let res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
-            }
-        } else if (quizId) {
-            let response = await editQuiz(
-                +this.$route.params.courseId,
-                quizId,
-                quizId,
-                'addQuestion',
-                {
-                    question: {
-                        name: question.name,
-                        mark: question.mark,
-                    },
-                },
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.updateQuiz'),
-                );
-            } else {
-                let res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
-            }
-        }
-        this.getQuizList();
+        commonModule.setLoadingIndicator(false);
     }
 }
 </script>
@@ -381,34 +234,6 @@ export default class InstructorQuizDetail extends Vue {
     }
 }
 
-.button {
-    font-size: 17px !important;
-    font-weight: 600 !important;
-    line-height: 24px !important;
-    border-radius: 6px;
-    padding: 8px 20px;
-    transition: all 0.44s ease 0s;
-    cursor: pointer;
-}
-
-.save-add-quiz {
-    color: $color-white;
-    background-color: $color-violet-new-1;
-
-    &:hover {
-        background-color: $color-violet-new-opacity-50;
-    }
-}
-
-.cancel-add-quiz {
-    color: #000;
-    background-color: #e8e8e8;
-
-    &:hover {
-        background-color: #f3f3f3;
-    }
-}
-
 .add-button {
     cursor: pointer;
     padding: 10px 20px;
@@ -416,24 +241,5 @@ export default class InstructorQuizDetail extends Vue {
     font-size: 20px;
     font-weight: 700;
     background: #ccc;
-}
-
-.text-ellipsis {
-    white-space: nowrap;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.field-wrapper {
-    display: flex;
-    flex-direction: row;
-    font-weight: 600;
-    align-items: center;
-    gap: 12px;
-    width: 80%;
-}
-
-.label {
-    width: 100px;
 }
 </style>

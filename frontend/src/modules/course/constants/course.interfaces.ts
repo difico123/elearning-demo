@@ -149,6 +149,8 @@ export interface IQuestionDetail {
     mark: number;
     answerList?: Array<IAnswerDetail>;
     answerCorrectState?: Array<boolean>;
+    _isEditingName?: boolean;
+    _isEditingMark?: boolean;
 }
 
 export interface IAnswerDetail {
@@ -158,6 +160,7 @@ export interface IAnswerDetail {
     isCorrect: boolean;
     isShowInput?: boolean;
     isAnswer?: string;
+    _isEditing?: boolean;
 }
 
 export interface ICreateQuizParams {

@@ -69,59 +69,6 @@
                 </div>
             </div>
         </div>
-        <div class="d-flex flex-column" v-if="userRole === SystemRole.INSTRUCTOR">
-            <div
-                class="sidebar-button delete-course-button"
-                :class="{ collapsed: isCollapsed }"
-                @click="showDeletePopup"
-            >
-                <span>
-                    <span v-if="!isCollapsed">
-                        {{ $t('course.courseSidebar.deleteCourse') }}
-                    </span>
-                    <img
-                        v-else
-                        src="@/assets/course/icons/delete.png"
-                        width="24"
-                        alt=""
-                    />
-                </span>
-            </div>
-            <div
-                @click="toggleCourseState(!courseState)"
-                class="sidebar-button"
-                :class="[
-                    { 'suspend-course-button': courseState },
-                    {
-                        'activate-course-button': !courseState,
-                    },
-                    { collapsed: isCollapsed },
-                ]"
-            >
-                <div v-if="!courseState">
-                    <span v-if="!isCollapsed">
-                        {{ $t('course.courseSidebar.activateCourse') }}
-                    </span>
-                    <img
-                        v-else
-                        src="@/assets/course/icons/activate.png"
-                        width="24"
-                        alt=""
-                    />
-                </div>
-                <div v-else>
-                    <span v-if="!isCollapsed">
-                        {{ $t('course.courseSidebar.suspendCourse') }}
-                    </span>
-                    <img
-                        v-else
-                        src="@/assets/course/icons/suspend.png"
-                        width="24"
-                        alt=""
-                    />
-                </div>
-            </div>
-        </div>
     </div>
 </template>
 

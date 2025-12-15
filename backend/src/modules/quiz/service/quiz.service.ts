@@ -2,13 +2,20 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { timeStampToMysql } from 'src/common/ultils';
 import { UserAnswerService } from 'src/modules/user-answer/service/user-answer.service';
 import { UserQuizService } from 'src/modules/user-quiz/service/user-quiz.service';
+import { TopicService } from 'src/modules/topics/service/topic.service';
 import { getConnection, Repository } from 'typeorm';
-import { BulkQuizInsertDto, BulkQuizResponseDto, IQuestion } from '../dto/dto';
+import {
+  BulkQuizInsertDto,
+  BulkQuizResponseDto,
+  BulkQuizUpdateDto,
+  IQuestion,
+} from '../dto/dto';
 import { Answer } from '../entity/answer.entity';
 import { Question } from '../entity/question.entity';
 import { Quiz } from '../entity/quiz.entity';
@@ -24,6 +31,7 @@ export class QuizService {
     private readonly answer: Repository<Answer>,
     private readonly userAnswer: UserAnswerService,
     private readonly userQuiz: UserQuizService,
+    private readonly topicService: TopicService,
   ) {}
 
   async saveQuiz(quiz: Partial<Quiz>): Promise<Quiz> {
@@ -36,8 +44,25 @@ export class QuizService {
 
   async saveQuizBulk(quizBulk: BulkQuizInsertDto, topicId: number) {
     const { questionList, name, startTime, shown, duration } = quizBulk;
+
+    // Validate quiz has at least 1 question
+    if (!questionList || questionList.length === 0) {
+      throw new BadRequestException('Quiz must have at least 1 question');
+    }
+
+    // Validate each question has at least 1 answer
+    for (const question of questionList) {
+      if (!question.answerList || question.answerList.length === 0) {
+        throw new BadRequestException(
+          'Each question must have at least 1 answer',
+        );
+      }
+    }
+
+    const topic = await this.topicService.existTopic(+topicId);
     let newQuiz = {
       topicId: +topicId,
+      courseId: topic.courseId,
       name,
       shown,
       startTime: timeStampToMysql(startTime),
@@ -48,9 +73,6 @@ export class QuizService {
     await queryRunner.startTransaction();
     try {
       let quiz: BulkQuizResponseDto = await this.quiz.save(newQuiz);
-      if (!questionList?.length) {
-        return quiz;
-      }
       let questions = await Promise.all([
         ...questionList?.map(async (questionItem) => {
           let { name, mark, answerList } = questionItem;
@@ -104,14 +126,21 @@ export class QuizService {
     }
   }
 
-  async getBulks(topicId: number, studentId: string) {
+  async getBulks(topicId: number, studentId: string, courseId?: number) {
     try {
+      if (courseId) {
+        const topic = await this.topicService.existTopic(topicId);
+        if (topic.courseId !== courseId) {
+          throw new NotFoundException('topic not found in course');
+        }
+      }
+
       let show: { shown?: boolean } = {};
       show = !!studentId && {
         shown: true,
       };
       let quiz: BulkQuizResponseDto[] = await this.quiz.find({
-        where: { topicId: topicId, ...show },
+        where: { topicId: topicId, ...(courseId ? { courseId } : {}), ...show },
       });
       quiz = await Promise.all(
         quiz.map(async (quizItem) => {
@@ -347,6 +376,149 @@ export class QuizService {
       return this.question.save(question);
     } catch (error) {
       throw new InternalServerErrorException(error);
+    }
+  }
+
+  async updateQuizBulk(
+    quizId: number,
+    courseId: number,
+    data: BulkQuizUpdateDto,
+  ) {
+    // Filter out invalid questions (empty name or empty answerList) before validation
+    const validQuestions = (data.questions || []).filter(
+      (q) =>
+        q.name &&
+        q.name.trim().length > 0 &&
+        q.answerList &&
+        q.answerList.length > 0,
+    );
+
+    // Validate quiz has at least 1 valid question
+    if (validQuestions.length === 0) {
+      throw new BadRequestException(
+        'Quiz must have at least 1 question with at least 1 answer',
+      );
+    }
+
+    // Validate each question has at least 1 answer (already filtered, but double-check)
+    for (const question of validQuestions) {
+      if (!question.answerList || question.answerList.length === 0) {
+        throw new BadRequestException(
+          'Each question must have at least 1 answer',
+        );
+      }
+      // Filter out answers with empty content
+      question.answerList = question.answerList.filter(
+        (a) => a.content && a.content.trim().length > 0,
+      );
+      if (question.answerList.length === 0) {
+        throw new BadRequestException(
+          'Each question must have at least 1 answer with content',
+        );
+      }
+    }
+
+    // Use filtered questions
+    data.questions = validQuestions;
+
+    const quizExist = await this.existQuiz(quizId);
+    const topic = await this.topicService.existTopic(quizExist.topicId);
+    if (topic.courseId !== courseId) {
+      throw new NotFoundException('Quiz does not belong to course');
+    }
+
+    const queryRunner = await getConnection().createQueryRunner();
+    await queryRunner.startTransaction();
+
+    try {
+      // Update quiz meta
+      const quizUpdate: Partial<Quiz> = {
+        name: data.quiz.name,
+        duration: +data.quiz.duration,
+      };
+      if (data.quiz.shown !== undefined) {
+        quizUpdate.shown = data.quiz.shown;
+      }
+      await this.quiz.update(quizId, quizUpdate);
+
+      // Delete removed answers first (to avoid foreign key constraints)
+      if (data.deletedAnswerIds && data.deletedAnswerIds.length > 0) {
+        await this.answer.delete(data.deletedAnswerIds);
+      }
+
+      // Delete removed questions (cascades to answers)
+      if (data.deletedQuestionIds && data.deletedQuestionIds.length > 0) {
+        await this.question.delete(data.deletedQuestionIds);
+      }
+
+      // Upsert questions and answers
+      const updatedQuestions = await Promise.all(
+        data.questions.map(async (questionData) => {
+          let questionId: number;
+
+          if (questionData.id) {
+            // Update existing question
+            await this.question.update(questionData.id, {
+              name: questionData.name,
+              mark: questionData.mark,
+            });
+            questionId = questionData.id;
+          } else {
+            // Create new question
+            const newQuestion = await this.question.save({
+              quizId: quizId,
+              name: questionData.name,
+              mark: questionData.mark,
+            });
+            questionId = newQuestion.id;
+          }
+
+          // Upsert answers for this question
+          const updatedAnswers = await Promise.all(
+            questionData.answerList.map(async (answerData) => {
+              if (answerData.id) {
+                // Update existing answer
+                await this.answer.update(answerData.id, {
+                  content: answerData.content,
+                  isCorrect: answerData.isCorrect,
+                });
+                return { ...answerData, id: answerData.id };
+              } else {
+                // Create new answer
+                const newAnswer = await this.answer.save({
+                  questionId: questionId,
+                  content: answerData.content,
+                  isCorrect: answerData.isCorrect,
+                });
+                return { ...answerData, id: newAnswer.id };
+              }
+            }),
+          );
+
+          return {
+            id: questionId,
+            name: questionData.name,
+            mark: questionData.mark,
+            quizId: quizId,
+            answerList: updatedAnswers,
+          };
+        }),
+      );
+
+      await queryRunner.commitTransaction();
+
+      // Fetch and return the complete updated quiz
+      const updatedQuiz = await this.getBulks(
+        quizExist.topicId,
+        undefined,
+        courseId,
+      );
+      return updatedQuiz.find((q) => q.id === quizId);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 }

@@ -62,6 +62,27 @@
                     <img src="@/assets/common/images/user.svg" width="20" alt="" />
                 </div>
             </div>
+            <div v-if="userRole === SystemRole.INSTRUCTOR" class="course-actions pt-4">
+                <button
+                    class="course-action-button delete-course"
+                    type="button"
+                    @click="showDeletePopup"
+                >
+                    {{ $t('course.courseSidebar.deleteCourse') }}
+                </button>
+                <button
+                    class="course-action-button toggle-course"
+                    :class="courseState ? 'suspend-course' : 'activate-course'"
+                    type="button"
+                    @click="toggleCourseState(!courseState)"
+                >
+                    {{
+                        courseState
+                            ? $t('course.courseSidebar.suspendCourse')
+                            : $t('course.courseSidebar.activateCourse')
+                    }}
+                </button>
+            </div>
         </div>
         <div class="course-info-information-right d-flex flex-column align-items-center">
             <div class="course-info-image">
@@ -72,19 +93,21 @@
 </template>
 
 <script lang="ts">
-import { PageName, SystemRole } from '@/common/constants';
+import { PageName, SupportLanguage, SystemRole } from '@/common/constants';
 import {
     showErrorNotificationFunction,
     showSuccessNotificationFunction,
 } from '@/common/helpers';
 import localStorageTokenService from '@/common/tokenService';
 import { commonModule } from '@/modules/common/store/common.store';
+import { appModule } from '@/plugins/vuex/appModule';
 import { userModule } from '@/modules/user/store/user.store';
 import { Options, Vue } from 'vue-class-component';
-import { rateCourse } from '../../services/course';
+import { deleteCourse, rateCourse, updateCourse } from '../../services/course';
 import { getUserCourseData } from '../../services/user-course';
 import { courseModule } from '../../store/course.store';
 import { userCourseModule } from '../../store/user-course.store';
+import { ElMessageBox } from 'element-plus';
 
 @Options({
     components: {},
@@ -101,6 +124,14 @@ export default class CourseGeneralInfo extends Vue {
 
     get courseRating() {
         return userCourseModule.userCourseData.rating;
+    }
+
+    get courseState() {
+        return courseModule.coursePreviewData?.course?.isPublished;
+    }
+
+    get currentLanguage() {
+        return appModule.currentLanguage;
     }
 
     created() {
@@ -137,6 +168,54 @@ export default class CourseGeneralInfo extends Vue {
             userCourseModule.setUserCourseData({});
             showErrorNotificationFunction(res[0].message);
         }
+    }
+
+    showDeletePopup() {
+        ElMessageBox.confirm(
+            this.currentLanguage === SupportLanguage.VI
+                ? 'Bạn có chắc chắn muốn xóa khóa học này không?'
+                : 'Are you sure you want to delete this course?',
+        ).then(() => {
+            return this.handleDeleteCourse();
+        });
+    }
+
+    async handleDeleteCourse() {
+        const courseId = +this.$route.params.courseId;
+        commonModule.setLoadingIndicator(true);
+        const response = await deleteCourse(courseId);
+        if (response.success) {
+            showSuccessNotificationFunction(this.$t('course.success.deleteCourse'));
+            setTimeout(
+                () =>
+                    this.$router.push({
+                        name: PageName.USER_COURSE_LIST_PAGE,
+                    }),
+                2000,
+            );
+        } else {
+            showErrorNotificationFunction(this.$t('course.errors.deleteCourse'));
+        }
+        commonModule.setLoadingIndicator(false);
+    }
+
+    async toggleCourseState(state: boolean) {
+        commonModule.setLoadingIndicator(true);
+        let formData = new FormData();
+        const courseId = +this.$route.params.courseId;
+
+        formData.append('isPublished', state.toString());
+        const response = await updateCourse(formData, courseId);
+        if (response.success) {
+            showSuccessNotificationFunction(this.$t('course.success.toggleCourse'));
+            await this.$emit('reload');
+        } else {
+            let res = response?.errors || [
+                { message: this.$t('course.errors.toggleCourse') },
+            ];
+            showErrorNotificationFunction(res[0].message);
+        }
+        commonModule.setLoadingIndicator(false);
     }
 }
 </script>
@@ -179,6 +258,12 @@ export default class CourseGeneralInfo extends Vue {
     }
 }
 
+.course-info-instructor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .star {
     cursor: pointer;
 }
@@ -198,5 +283,40 @@ export default class CourseGeneralInfo extends Vue {
     .course-information {
         gap: 30px;
     }
+}
+
+.course-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: $color-white;
+}
+
+.course-action-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.course-action-button:focus {
+    outline: none;
+}
+
+.delete-course {
+    color: #ff0000;
+}
+
+.suspend-course {
+    color: #ff6700;
+}
+
+.activate-course {
+    color: #5ced73;
 }
 </style>

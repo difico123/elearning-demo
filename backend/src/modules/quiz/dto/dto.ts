@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { CommonListResponse } from 'src/common/helpers/api.response';
 import { Answer } from '../entity/answer.entity';
 import { Question } from '../entity/question.entity';
@@ -53,21 +52,24 @@ export interface IQuestion extends Question {
   userAnswers?: number[];
 }
 
-export interface IQueryEditDto {
-  type: 'quiz' | 'question' | 'answer' | 'addQuestion' | 'addAnswer';
-  sourceId: number;
-}
+export type QuizListResponseDto = CommonListResponse<Quiz>;
 
-export interface IEditQuizDto {
-  answer?: Answer;
-  question?: IQuestion;
-  quiz?: BulkQuizInsertDto;
+export interface BulkQuizUpdateDto {
+  quiz: {
+    name: string;
+    duration: string;
+    shown?: boolean;
+  };
+  questions: Array<{
+    id?: number; // undefined = new question
+    name: string;
+    mark: number;
+    answerList: Array<{
+      id?: number; // undefined = new answer
+      content: string;
+      isCorrect: boolean;
+    }>;
+  }>;
+  deletedQuestionIds?: number[];
+  deletedAnswerIds?: number[];
 }
-
-export interface IUpdateQuizDto {
-  answer?: Answer;
-  question?: Question;
-  quiz?: Quiz;
-}
-
-export interface QuizListResponseDto extends CommonListResponse<Quiz> {}

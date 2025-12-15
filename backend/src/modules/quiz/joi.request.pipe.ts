@@ -30,21 +30,44 @@ const createQuizSchema = Joi.object().keys({
     .message('duration should be a number'),
 });
 
-const editQuizQuerySchema = Joi.object().keys({
-  type: Joi.string()
-    .valid('question', 'quiz', 'answer', 'addQuestion', 'addAnswer')
-    .required(),
-  sourceId: Joi.string()
-    .pattern(/^[0-9]+$/)
-    .message('sourceId should be a number')
-    .required(),
-});
+const bulkQuizUpdateSchema = Joi.object()
+  .keys({
+    quiz: Joi.object()
+      .keys({
+        name: Joi.string().min(1).required(),
+        duration: Joi.alternatives().try(Joi.string(), Joi.number()).required(),
+        shown: Joi.boolean().optional(),
+      })
+      .required(),
+    questions: Joi.array()
+      .items(
+        Joi.object().keys({
+          id: Joi.number().optional(),
+          name: Joi.string().allow('').optional(), // Allow empty, will filter in service
+          mark: Joi.number().required(),
+          answerList: Joi.array()
+            .items(
+              Joi.object().keys({
+                id: Joi.number().optional(),
+                content: Joi.string().allow('').optional(), // Allow empty, will filter in service
+                isCorrect: Joi.boolean().required(),
+              }),
+            )
+            .optional(), // Allow empty, will filter in service
+        }),
+      )
+      .required(),
+    deletedQuestionIds: Joi.array().items(Joi.number()).optional(),
+    deletedAnswerIds: Joi.array().items(Joi.number()).optional(),
+  })
+  .unknown(false)
+  .options({ stripUnknown: false });
 
 const validationSchemas = {
   topicIdParamSchema,
   createQuizSchema,
-  editQuizQuerySchema,
   updateQuizParamSchema,
+  bulkQuizUpdateSchema,
 };
 
 type validationKeyType = keyof typeof validationSchemas;

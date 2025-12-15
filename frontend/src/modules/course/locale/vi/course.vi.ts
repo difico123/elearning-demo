@@ -172,6 +172,7 @@ export const course = {
         form: {
             duration: '{time} phút',
             mark: '{mark} điểm',
+            isCorrect: 'Đúng',
             addQuiz: 'Thêm bài tập',
             addQuestion: 'Thêm câu hỏi',
             addAnswer: 'Thêm câu trả lời',
@@ -181,6 +182,7 @@ export const course = {
             startTime: 'Thời gian',
             save: 'Lưu',
             cancel: 'Hủy',
+            editQuiz: 'Sửa bài tập',
         },
 
         field: {
@@ -188,6 +190,7 @@ export const course = {
             addAnswer: 'Câu trả lời mới',
             addQuestionPlaceholder: 'Nhập tên câu hỏi',
             question: 'Câu',
+            answer: 'Trả lời',
         },
         leaderboard: 'Đại lộ danh vọng',
         submitQuiz: 'Nộp bài',

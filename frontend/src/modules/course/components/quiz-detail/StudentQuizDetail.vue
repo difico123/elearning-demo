@@ -38,6 +38,10 @@ export default class StudentQuizDetail extends Vue {
 
     async getQuizList() {
         const courseId = +this.$route.params.courseId;
+        if (!this.topicId || this.topicId <= 0) {
+            courseModule.setQuizList([]);
+            return;
+        }
         const response = await getQuizList(courseId, this.topicId as number);
         if (response?.success) {
             courseModule.setQuizList(response?.data?.items || []);
