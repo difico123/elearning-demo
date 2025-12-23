@@ -18,6 +18,7 @@
         >
             <InstructorAnswer
                 :answer="answer"
+                :question="question"
                 :index="index"
                 :isEdit="isEdit"
             />

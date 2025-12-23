@@ -192,6 +192,15 @@ export const course = {
             question: 'Câu',
             answer: 'Trả lời',
         },
+
+        questionType: {
+            multipleChoice: 'Nhiều lựa chọn',
+            singleChoice: 'Một lựa chọn',
+            shortAnswer: 'Câu trả lời ngắn',
+            selectType: 'Loại câu hỏi',
+            correctAnswer: 'Đáp án đúng',
+        },
+        correctAnswer: 'Đáp án đúng',
         leaderboard: 'Đại lộ danh vọng',
         submitQuiz: 'Nộp bài',
         doneQuiz: 'Bạn đã làm quiz này rồi',

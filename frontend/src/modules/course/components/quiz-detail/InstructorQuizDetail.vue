@@ -157,6 +157,7 @@ export default class InstructorQuizDetail extends Vue {
             const questionList = (data.questions || []).map((q) => ({
                 name: q.name || '',
                 mark: q.mark || 0,
+                type: q.type || 'multiple_choice',
                 answerList: (q.answerList || []).map((a) => ({
                     content: a.content || '',
                     isCorrect: a.isCorrect || false,
@@ -197,6 +198,7 @@ export default class InstructorQuizDetail extends Vue {
                         id: q.id,
                         name: q.name,
                         mark: q.mark,
+                        type: q.type || 'multiple_choice',
                         answerList: (q.answerList || []).map((a) => ({
                             id: a.id,
                             content: a.content,

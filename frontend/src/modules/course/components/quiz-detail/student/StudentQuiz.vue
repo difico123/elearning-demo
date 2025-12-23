@@ -109,13 +109,59 @@ export default class StudentQuiz extends Vue {
     async submitQuiz() {
         const courseId = +this.$route.params.courseId;
         commonModule.setLoadingIndicator(true);
+
+        // Build answer payload based on question types
+        const answers: Array<{
+            questionId: number;
+            answerIds?: number[];
+            answerText?: string;
+        }> = [];
+
+        if (this.quiz?.questionList) {
+            for (const question of this.quiz.questionList) {
+                const questionId = question.id;
+                if (!questionId) continue;
+
+                const type = question.type || 'multiple_choice';
+                const answerData: {
+                    questionId: number;
+                    answerIds?: number[];
+                    answerText?: string;
+                } = { questionId };
+
+                if (type === 'short_answer' || type === 'single_choice') {
+                    // Both short_answer and single_choice work the same way - select one answer
+                    const answerId = courseModule.getSingleChoiceAnswer(questionId);
+                    if (answerId) {
+                        answerData.answerIds = [answerId];
+                        answers.push(answerData);
+                    }
+                } else {
+                    // Multiple choice: use existing quizAnswerList
+                    const selectedAnswers = this.quizAnswerList
+                        .filter((item) => {
+                            // Check if this answer belongs to this question
+                            return question.answerList?.some(
+                                (a) => a.id === item.id,
+                            );
+                        })
+                        .map((item) => item.id as number);
+                    if (selectedAnswers.length > 0) {
+                        answerData.answerIds = selectedAnswers;
+                        answers.push(answerData);
+                    }
+                }
+            }
+        }
+
         const response = await submitQuiz(
             courseId,
             this.quiz?.id as number,
-            this.quizAnswerList.map((item) => item.id as number),
+            answers,
         );
         if (response?.success) {
             showSuccessNotificationFunction(this.$t('course.success.quiz.submitQuiz'));
+            courseModule.clearQuizAnswers();
             await this.getQuizList();
         } else {
             let res = response?.errors || [

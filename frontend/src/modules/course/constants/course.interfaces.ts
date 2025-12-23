@@ -147,6 +147,7 @@ export interface IQuestionDetail {
     id?: number;
     name: string;
     mark: number;
+    type?: 'multiple_choice' | 'single_choice' | 'short_answer';
     answerList?: Array<IAnswerDetail>;
     answerCorrectState?: Array<boolean>;
     _isEditingName?: boolean;

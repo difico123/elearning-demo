@@ -6,13 +6,29 @@
             <span>{{ $t('course.quiz.form.mark', { mark: question?.mark }) }}</span>
         </div>
     </div>
-    <div class="answer-wrapper px-3">
+    <div class="answer-wrapper px-3" v-if="question?.type === 'short_answer'">
+        <StudentAnswer 
+            :answer="question.answerList && question.answerList[0] ? question.answerList[0] : null" 
+            :question="question"
+            :index="0" 
+        />
+    </div>
+    <div class="answer-wrapper px-3" v-else-if="question?.type === 'single_choice'">
         <div
             class="answer-card d-flex flex-row gap-3"
             v-for="(answer, index) in question?.answerList"
             :key="index"
         >
-            <StudentAnswer :answer="answer" :index="index" />
+            <StudentAnswer :answer="answer" :question="question" :index="index" />
+        </div>
+    </div>
+    <div class="answer-wrapper px-3" v-else>
+        <div
+            class="answer-card d-flex flex-row gap-3"
+            v-for="(answer, index) in question?.answerList"
+            :key="index"
+        >
+            <StudentAnswer :answer="answer" :question="question" :index="index" />
         </div>
     </div>
 </template>

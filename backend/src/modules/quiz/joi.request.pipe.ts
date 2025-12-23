@@ -45,6 +45,10 @@ const bulkQuizUpdateSchema = Joi.object()
           id: Joi.number().optional(),
           name: Joi.string().allow('').optional(), // Allow empty, will filter in service
           mark: Joi.number().required(),
+          type: Joi.string()
+            .valid('multiple_choice', 'single_choice', 'short_answer')
+            .default('multiple_choice')
+            .optional(),
           answerList: Joi.array()
             .items(
               Joi.object().keys({

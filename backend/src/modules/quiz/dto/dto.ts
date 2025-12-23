@@ -23,6 +23,7 @@ export interface QuestionItem {
   quizId: number;
   name: string;
   mark: number;
+  type?: string;
   answerList: AnswerItem[];
 }
 
@@ -47,9 +48,10 @@ export interface BulkQuizResponseDto extends Quiz {
   questionList?: IQuestion[];
 }
 
-export interface IQuestion extends Question {
+export interface IQuestion extends Omit<Question, 'type'> {
   answerList?: Answer[];
   userAnswers?: number[];
+  type?: string;
 }
 
 export type QuizListResponseDto = CommonListResponse<Quiz>;
@@ -64,6 +66,7 @@ export interface BulkQuizUpdateDto {
     id?: number; // undefined = new question
     name: string;
     mark: number;
+    type?: string;
     answerList: Array<{
       id?: number; // undefined = new answer
       content: string;

@@ -278,6 +278,7 @@ export async function createQuiz(
             id?: number;
             name: string;
             mark: number;
+            type?: string;
             answerList: Array<{
                 id?: number;
                 content: string;
@@ -465,13 +466,17 @@ export async function rateCourse(
 export async function submitQuiz(
     courseId: number,
     quizId: number,
-    answer: Array<number>,
+    answers: Array<{
+        questionId: number;
+        answerIds?: number[];
+        answerText?: string;
+    }>,
 ): Promise<IAxiosListDefaultResponse<Record<string, never>>> {
     return axios
         .post(
             `${BE_URL}/user-answer/${courseId}/${quizId}`,
 
-            answer,
+            answers,
 
             {
                 headers: {

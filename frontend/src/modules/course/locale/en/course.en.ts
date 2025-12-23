@@ -191,6 +191,15 @@ export const course = {
             question: 'Question',
             answer: 'Answer',
         },
+
+        questionType: {
+            multipleChoice: 'Multiple Choice',
+            singleChoice: 'Single Choice',
+            shortAnswer: 'Short Answer',
+            selectType: 'Question Type',
+            correctAnswer: 'Correct Answer',
+        },
+        correctAnswer: 'Correct Answer',
         leaderboard: 'Leaderboard',
         submitQuiz: 'Submit Answers',
         doneQuiz: 'You have already completed this quiz.',

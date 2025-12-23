@@ -50,12 +50,44 @@ export class QuizService {
       throw new BadRequestException('Quiz must have at least 1 question');
     }
 
-    // Validate each question has at least 1 answer
-    for (const question of questionList) {
-      if (!question.answerList || question.answerList.length === 0) {
-        throw new BadRequestException(
-          'Each question must have at least 1 answer',
-        );
+    // Validate each question based on type
+    for (let i = 0; i < questionList.length; i++) {
+      const question = questionList[i];
+      const questionType = question.type || 'multiple_choice';
+      const questionName = question.name || `Question ${i + 1}`;
+      const answerList = question.answerList || [];
+      const correctAnswers = answerList.filter((a) => a.isCorrect);
+
+      if (questionType === 'short_answer') {
+        if (answerList.length !== 1) {
+          throw new BadRequestException(
+            `Question '${questionName}': Short answer questions must have exactly 1 answer`,
+          );
+        }
+        if (!answerList[0].isCorrect) {
+          throw new BadRequestException(
+            `Question '${questionName}': Short answer question must have isCorrect set to true`,
+          );
+        }
+      } else if (questionType === 'single_choice') {
+        if (answerList.length < 2) {
+          throw new BadRequestException(
+            `Question '${questionName}': Single choice questions must have at least 2 answers`,
+          );
+        }
+        if (correctAnswers.length !== 1) {
+          throw new BadRequestException(
+            `Question '${questionName}': Single choice questions must have exactly 1 correct answer`,
+          );
+        }
+      } else {
+        // Multiple choice: at least 1 answer, 0 or more correct answers allowed
+        if (answerList.length === 0) {
+          throw new BadRequestException(
+            `Question '${questionName}': Each question must have at least 1 answer`,
+          );
+        }
+        // No validation for correct answer count - 0 is allowed
       }
     }
 
@@ -75,12 +107,15 @@ export class QuizService {
       let quiz: BulkQuizResponseDto = await this.quiz.save(newQuiz);
       let questions = await Promise.all([
         ...questionList?.map(async (questionItem) => {
-          let { name, mark, answerList } = questionItem;
+          let { name, mark, type, answerList } = questionItem;
 
           let newQuestion = {
             quizId: quiz.id,
             name,
             mark: +mark,
+            type: (type && ['multiple_choice', 'single_choice', 'short_answer'].includes(type)) 
+              ? type 
+              : 'multiple_choice',
           };
           let question: IQuestion = await this.question.save(newQuestion);
           if (!answerList?.length) {
@@ -169,6 +204,7 @@ export class QuizService {
               }
               return {
                 ...questionItem,
+                type: questionItem.type || 'multiple_choice',
                 answerList: answers,
                 userAnswers,
               };
@@ -278,11 +314,13 @@ export class QuizService {
       answerId: number;
       questionId: number;
       mark: number;
+      type: string;
+      content: string;
     }[]
   > {
     try {
       let query = `
-      SELECT a.id as answerId, a.questionId, qu.mark, a.isCorrect
+      SELECT a.id as answerId, a.questionId, qu.mark, a.isCorrect, qu.type, a.content
       FROM answers a
       LEFT JOIN questions qu 
       ON qu.id = a.questionId
@@ -291,6 +329,14 @@ export class QuizService {
       WHERE qi.id = ?
       `;
       return this.quiz.query(query, [quizId]);
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async findOneAnswerById(answerId: number): Promise<Answer | null> {
+    try {
+      return this.answer.findOne({ where: { id: answerId } });
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
@@ -400,21 +446,49 @@ export class QuizService {
       );
     }
 
-    // Validate each question has at least 1 answer (already filtered, but double-check)
-    for (const question of validQuestions) {
-      if (!question.answerList || question.answerList.length === 0) {
-        throw new BadRequestException(
-          'Each question must have at least 1 answer',
-        );
-      }
+    // Validate each question based on type
+    for (let i = 0; i < validQuestions.length; i++) {
+      const question = validQuestions[i];
+      const questionType = question.type || 'multiple_choice';
+      const questionName = question.name || `Question ${i + 1}`;
+
       // Filter out answers with empty content
       question.answerList = question.answerList.filter(
         (a) => a.content && a.content.trim().length > 0,
       );
-      if (question.answerList.length === 0) {
-        throw new BadRequestException(
-          'Each question must have at least 1 answer with content',
-        );
+      
+      // Check minimum answer count first
+      if (questionType === 'short_answer') {
+        if (question.answerList.length !== 1) {
+          throw new BadRequestException(
+            `Question '${questionName}': Short answer questions must have exactly 1 answer`,
+          );
+        }
+        if (!question.answerList[0].isCorrect) {
+          throw new BadRequestException(
+            `Question '${questionName}': Short answer question must have isCorrect set to true`,
+          );
+        }
+      } else if (questionType === 'single_choice') {
+        if (question.answerList.length < 2) {
+          throw new BadRequestException(
+            `Question '${questionName}': Single choice questions must have at least 2 answers`,
+          );
+        }
+        const correctAnswers = question.answerList.filter((a) => a.isCorrect);
+        if (correctAnswers.length !== 1) {
+          throw new BadRequestException(
+            `Question '${questionName}': Single choice questions must have exactly 1 correct answer`,
+          );
+        }
+      } else {
+        // Multiple choice
+        if (question.answerList.length === 0) {
+          throw new BadRequestException(
+            `Question '${questionName}': Each question must have at least 1 answer with content`,
+          );
+        }
+        // Multiple choice can have 0 correct answers (no validation needed)
       }
     }
 
@@ -461,6 +535,9 @@ export class QuizService {
             await this.question.update(questionData.id, {
               name: questionData.name,
               mark: questionData.mark,
+              type: (questionData.type && ['multiple_choice', 'single_choice', 'short_answer'].includes(questionData.type))
+                ? questionData.type
+                : 'multiple_choice',
             });
             questionId = questionData.id;
           } else {
@@ -469,6 +546,9 @@ export class QuizService {
               quizId: quizId,
               name: questionData.name,
               mark: questionData.mark,
+              type: (questionData.type && ['multiple_choice', 'single_choice', 'short_answer'].includes(questionData.type))
+                ? questionData.type
+                : 'multiple_choice',
             });
             questionId = newQuestion.id;
           }
@@ -499,6 +579,7 @@ export class QuizService {
             id: questionId,
             name: questionData.name,
             mark: questionData.mark,
+            type: questionData.type || 'multiple_choice',
             quizId: quizId,
             answerList: updatedAnswers,
           };

@@ -8,5 +8,7 @@ export interface AnswerQuizBody {
 }
 
 export interface UserAnswer {
-  answerId: number;
+  questionId: number;
+  answerIds?: number[]; // For multiple/single choice
+  answerText?: string; // For short answer
 }

@@ -25,4 +25,13 @@ export class Question {
   @ApiProperty({ example: 5 })
   @Column({ nullable: false })
   mark: number;
+
+  @ApiProperty({ example: 'multiple_choice' })
+  @Column({
+    type: 'enum',
+    enum: ['multiple_choice', 'single_choice', 'short_answer'],
+    default: 'multiple_choice',
+    nullable: false,
+  })
+  type: string;
 }

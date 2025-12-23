@@ -33,6 +33,12 @@ class CourseModule extends VuexModule {
     unreadMessageCount = 0;
     courseRating = 1;
     quizAnswerList: Array<IAnswerDetail> = [];
+    quizAnswerData: {
+        [questionId: number]: {
+            answerIds?: number[];
+            answerText?: string;
+        };
+    } = {};
     studentRankingList: Array<IStudentRankData> = [];
 
     @Action
@@ -263,6 +269,51 @@ class CourseModule extends VuexModule {
     @Mutation
     SET_STUDENT_RANKING_LIST(studentRankingList: Array<IStudentRankData>) {
         this.studentRankingList = studentRankingList;
+    }
+
+    @Action
+    setShortAnswer(questionId: number, answerText: string) {
+        this.SET_SHORT_ANSWER({ questionId, answerText });
+    }
+
+    @Mutation
+    SET_SHORT_ANSWER({ questionId, answerText }: { questionId: number; answerText: string }) {
+        if (!this.quizAnswerData[questionId]) {
+            this.quizAnswerData[questionId] = {};
+        }
+        this.quizAnswerData[questionId].answerText = answerText;
+    }
+
+    getShortAnswer(questionId: number): string {
+        return this.quizAnswerData[questionId]?.answerText || '';
+    }
+
+    @Action
+    setSingleChoiceAnswer(questionId: number, answerId: number) {
+        this.SET_SINGLE_CHOICE_ANSWER({ questionId, answerId });
+    }
+
+    @Mutation
+    SET_SINGLE_CHOICE_ANSWER({ questionId, answerId }: { questionId: number; answerId: number }) {
+        if (!this.quizAnswerData[questionId]) {
+            this.quizAnswerData[questionId] = {};
+        }
+        this.quizAnswerData[questionId].answerIds = [answerId];
+    }
+
+    getSingleChoiceAnswer(questionId: number): number | undefined {
+        return this.quizAnswerData[questionId]?.answerIds?.[0];
+    }
+
+    @Action
+    clearQuizAnswers() {
+        this.CLEAR_QUIZ_ANSWERS();
+    }
+
+    @Mutation
+    CLEAR_QUIZ_ANSWERS() {
+        this.quizAnswerList = [];
+        this.quizAnswerData = {};
     }
 }
 export const courseModule = getModule(CourseModule);
