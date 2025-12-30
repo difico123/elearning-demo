@@ -13,7 +13,6 @@
                 :quiz="quiz"
                 isShowTitle="true"
                 :isEdit="quiz.isEdit"
-                @toggle-show-quiz="handleToggleQuiz"
                 @edit-quiz="handleOpenQuizEditPopup"
             />
         </div>
@@ -82,53 +81,6 @@ export default class InstructorQuizDetail extends Vue {
         }
     }
 
-    async handleToggleQuiz(quiz: IQuizDetail) {
-        if (quiz?.id) {
-            // For toggle shown, we still need to update just the quiz meta
-            // We'll use bulk update with all existing questions
-            const questions = (quiz.questionList || []).map((q) => ({
-                id: q.id,
-                name: q.name,
-                mark: q.mark,
-                answerList: (q.answerList || []).map((a) => ({
-                    id: a.id,
-                    content: a.content,
-                    isCorrect: a.isCorrect,
-                })),
-            }));
-
-            const payload = {
-                quiz: {
-                    name: quiz.name || '',
-                    duration: quiz.duration || '0',
-                    shown: quiz.shown,
-                },
-                questions: questions,
-                deletedQuestionIds: [],
-                deletedAnswerIds: [],
-            };
-
-            // Note: We need to update shown separately since it's not in the bulk DTO
-            // For now, we'll keep the old endpoint for this simple toggle
-            // Or we can add shown to the bulk DTO if needed
-            const response = await updateQuizBulk(
-                +this.$route.params.courseId,
-                quiz.id,
-                payload,
-            );
-            if (response?.success) {
-                showSuccessNotificationFunction(
-                    this.$t('course.success.quiz.updateQuiz'),
-                );
-            } else {
-                const res = response?.errors || [
-                    { message: this.$t('course.errors.quiz.updateTopic') },
-                ];
-                showErrorNotificationFunction(res[0].message);
-            }
-        }
-        this.getQuizList();
-    }
 
     handleOpenQuizEditPopup(quiz: IQuizDetail) {
         const popup = this.$refs.quizEditPopup as any;
@@ -171,7 +123,6 @@ export default class InstructorQuizDetail extends Vue {
                     name: data.quiz.name || '',
                     startTime: moment().format('YYYY-MM-DD HH:mm:ss'),
                     duration: +data.quiz.duration || 0,
-                    shown: false,
                     questionList: questionList,
                 };
 
@@ -238,10 +189,9 @@ export default class InstructorQuizDetail extends Vue {
 
 .add-button {
     cursor: pointer;
-    padding: 10px 20px;
-    border-left: 4px solid black;
+    padding: 10px 0;
     font-size: 20px;
-    font-weight: 700;
-    background: #ccc;
+    font-weight: 500;
+    background: transparent;
 }
 </style>

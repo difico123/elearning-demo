@@ -90,7 +90,6 @@
                                 <el-input
                                     v-if="question._isEditingName"
                                     size="small"
-                                    class="flex-1"
                                     v-model="question.name"
                                     :placeholder="$t('course.quiz.form.title')"
                                 />
@@ -130,19 +129,25 @@
                                 <el-select
                                     v-model="question.type"
                                     size="small"
-                                    class="flex-1"
+                                    class="question-name-input"
                                     @change="handleQuestionTypeChange(qIndex)"
                                 >
                                     <el-option
-                                        :label="$t('course.quiz.questionType.multipleChoice')"
+                                        :label="
+                                            $t('course.quiz.questionType.multipleChoice')
+                                        "
                                         value="multiple_choice"
                                     />
                                     <el-option
-                                        :label="$t('course.quiz.questionType.singleChoice')"
+                                        :label="
+                                            $t('course.quiz.questionType.singleChoice')
+                                        "
                                         value="single_choice"
                                     />
                                     <el-option
-                                        :label="$t('course.quiz.questionType.shortAnswer')"
+                                        :label="
+                                            $t('course.quiz.questionType.shortAnswer')
+                                        "
                                         value="short_answer"
                                     />
                                 </el-select>
@@ -197,8 +202,8 @@
                             />
                             <el-radio
                                 v-else
+                                :label="aIndex + 1"
                                 v-model="singleChoiceCorrectAnswer[qIndex]"
-                                :label="aIndex"
                                 @change="handleSingleChoiceChange(qIndex, aIndex)"
                             />
                             <div
@@ -239,17 +244,27 @@
                     </div>
                     <div class="answer-wrapper" v-else>
                         <div class="d-flex flex-row align-items-center gap-3 answer-card">
-                            <span class="fw-bold">{{ $t('course.quiz.correctAnswer') }}:</span>
+                            <span class="fw-bold"
+                                >{{ $t('course.quiz.correctAnswer') }}:</span
+                            >
                             <div class="flex-1">
                                 <el-input
-                                    v-if="question.answerList && question.answerList[0] && question.answerList[0]._isEditing"
+                                    v-if="
+                                        question.answerList &&
+                                        question.answerList[0] &&
+                                        question.answerList[0]._isEditing
+                                    "
                                     size="small"
                                     class="flex-1"
                                     v-model="question.answerList[0].content"
                                     :placeholder="$t('course.quiz.correctAnswer')"
                                 />
                                 <div v-else class="inline-text flex-1">
-                                    {{ question.answerList && question.answerList[0] ? question.answerList[0].content : '—' }}
+                                    {{
+                                        question.answerList && question.answerList[0]
+                                            ? question.answerList[0].content
+                                            : '—'
+                                    }}
                                 </div>
                             </div>
                             <img
@@ -340,7 +355,8 @@ export default class QuizEditPopup extends Vue {
                 questionList: (quiz.questionList || []).map((q, qIdx) => {
                     const questionType = q.type || 'multiple_choice';
                     // Find the correct answer index for single choice
-                    const correctIndex = q.answerList?.findIndex((a) => a.isCorrect) ?? -1;
+                    const correctIndex =
+                        q.answerList?.findIndex((a) => a.isCorrect) ?? -1;
                     if (questionType === 'single_choice' && correctIndex >= 0) {
                         this.singleChoiceCorrectAnswer[qIdx] = correctIndex;
                     }
@@ -351,7 +367,9 @@ export default class QuizEditPopup extends Vue {
                     }));
                     if (questionType === 'short_answer') {
                         if (answerList.length === 0) {
-                            answerList = [{ content: '', isCorrect: true, _isEditing: false }];
+                            answerList = [
+                                { content: '', isCorrect: true, _isEditing: false },
+                            ];
                         } else if (answerList.length > 1) {
                             answerList = [answerList[0]];
                             answerList[0].isCorrect = true;
@@ -379,7 +397,7 @@ export default class QuizEditPopup extends Vue {
         }
         this.deletedQuestionIds = [];
         this.deletedAnswerIds = [];
-        this.isEditingQuizName = false;
+        this.isEditingQuizName = this.isCreateMode;
         this.isEditingQuizDuration = false;
         this.isShow = true;
     }
@@ -409,6 +427,8 @@ export default class QuizEditPopup extends Vue {
             type: 'multiple_choice',
             quizId: this.quizId,
             answerList: [],
+            _isEditingName: true,
+            _isEditingMark: false,
         });
     }
 
@@ -418,28 +438,42 @@ export default class QuizEditPopup extends Vue {
 
         if (question.type === 'short_answer') {
             // Reset to blank answer when switching to short_answer
-            question.answerList = [{
-                content: '',  // Reset to blank
-                isCorrect: true,
-                _isEditing: false,
-            }];
+            question.answerList = [
+                {
+                    content: '', // Reset to blank
+                    isCorrect: true,
+                    _isEditing: true,
+                },
+            ];
         } else if (question.type === 'single_choice') {
             // Preserve answers when switching to single_choice
             // Just ensure only one is correct
             if (question.answerList && question.answerList.length > 0) {
-                const correctCount = question.answerList.filter(a => a.isCorrect).length;
+                const correctCount = question.answerList.filter(
+                    (a) => a.isCorrect,
+                ).length;
+                let correctIndex = -1;
                 if (correctCount === 0) {
                     question.answerList[0].isCorrect = true;
+                    correctIndex = 0;
                 } else if (correctCount > 1) {
                     // Keep only the first correct answer
                     let foundFirst = false;
-                    question.answerList.forEach(a => {
+                    question.answerList.forEach((a, idx) => {
                         if (a.isCorrect && !foundFirst) {
                             foundFirst = true;
+                            correctIndex = idx;
                         } else if (a.isCorrect) {
                             a.isCorrect = false;
                         }
                     });
+                } else {
+                    // Find the one correct answer
+                    correctIndex = question.answerList.findIndex((a) => a.isCorrect);
+                }
+                // Update the singleChoiceCorrectAnswer binding
+                if (correctIndex >= 0) {
+                    this.singleChoiceCorrectAnswer[qIndex] = correctIndex;
                 }
             }
         }
@@ -462,10 +496,16 @@ export default class QuizEditPopup extends Vue {
         if (!question || !question.answerList) {
             return;
         }
-        // Uncheck all answers, then check the selected one
-        question.answerList.forEach((answer, idx) => {
-            answer.isCorrect = idx === aIndex;
+        // Set all answers to false first
+        question.answerList.forEach((answer) => {
+            answer.isCorrect = false;
         });
+        // Then set the selected answer to true
+        if (question.answerList[aIndex]) {
+            question.answerList[aIndex].isCorrect = true;
+        }
+        // Update the singleChoiceCorrectAnswer binding
+        this.singleChoiceCorrectAnswer[qIndex] = aIndex;
     }
 
     handleDeleteQuestion(qIndex: number) {
@@ -483,11 +523,20 @@ export default class QuizEditPopup extends Vue {
             if (!this.formData.questionList[qIndex].answerList) {
                 this.formData.questionList[qIndex].answerList = [];
             }
-            this.formData.questionList[qIndex].answerList!.push({
+            const question = this.formData.questionList[qIndex];
+            const newAnswer = {
                 content: '',
                 isCorrect: false,
-                questionId: this.formData.questionList[qIndex].id,
-            });
+                questionId: question.id,
+                _isEditing: true,
+            };
+            question.answerList!.push(newAnswer);
+
+            // For single choice questions, ensure new answer is false
+            if (question.type === 'single_choice') {
+                newAnswer.isCorrect = false;
+                // Don't update singleChoiceCorrectAnswer here - let user select via radio
+            }
         }
     }
 
@@ -545,7 +594,7 @@ export default class QuizEditPopup extends Vue {
             const answerList = (question.answerList || []).filter(
                 (a) => a.content && a.content.trim().length > 0,
             );
-            const correctAnswers = answerList.filter(a => a.isCorrect);
+            const correctAnswers = answerList.filter((a) => a.isCorrect);
 
             if (type === 'short_answer') {
                 if (answerList.length !== 1) {
@@ -589,7 +638,10 @@ export default class QuizEditPopup extends Vue {
                 name: this.formData.name,
                 duration: this.formData.duration,
             },
-            questions: this.formData.questionList || [],
+            questions: (this.formData.questionList || []).map((q) => ({
+                ...q,
+                type: q.type || 'multiple_choice', // Ensure type is always a string, never undefined
+            })),
             deletedQuestions: this.deletedQuestionIds,
             deletedAnswers: this.deletedAnswerIds,
         });
@@ -681,6 +733,7 @@ export default class QuizEditPopup extends Vue {
 .mark-label {
     flex-shrink: 0;
     font-weight: 600;
+    text-transform: capitalize;
 }
 
 .answer-wrapper {
@@ -729,5 +782,9 @@ export default class QuizEditPopup extends Vue {
 
 .inline-text {
     word-break: break-word;
+}
+
+.question-name-input {
+    width: 200px !important;
 }
 </style>

@@ -15,18 +15,6 @@
             <div class="quiz-duration">
                 {{ $t('course.quiz.form.duration', { time: quiz.duration }) }}
             </div>
-            <div class="d-flex align-items-center justify-content-center">
-                <el-icon
-                    v-if="!quiz.shown"
-                    style="cursor: pointer"
-                    @click="toggleShownQuiz"
-                >
-                    <Lock color="red" />
-                </el-icon>
-                <el-icon v-else style="cursor: pointer" @click="toggleShownQuiz">
-                    <Unlock color="green" />
-                </el-icon>
-            </div>
             <div
                 class="d-flex align-items-center justify-content-center"
                 v-if="quiz.isEdit"
@@ -80,20 +68,14 @@ export default class InstructorQuiz extends Vue {
     @Prop({ default: {} }) readonly quiz!: IQuizDetail;
     @Prop({ default: false }) readonly isShowTitle: boolean;
 
-    isShown = true;
     isShowDetail = false;
 
     get topicId() {
         return courseModule.topicId;
     }
 
-    toggleShownQuiz() {
-        this.quiz.shown = !this.quiz.shown;
-        this.$emit('toggle-show-quiz', this.quiz);
-    }
-
     toggleEditQuiz() {
-            this.$emit('edit-quiz', this.quiz);
+        this.$emit('edit-quiz', this.quiz);
     }
 
     toggleDetail() {
@@ -105,11 +87,10 @@ export default class InstructorQuiz extends Vue {
 <style lang="scss" scoped>
 .quiz {
     &-title {
-        border-left: 3px solid #c4c4c4;
-        padding: 8px 12px;
+        padding: 8px 0;
         text-align: center;
         align-items: center;
-        background-color: #f2f2f2;
+        background-color: transparent;
     }
 
     &-name {
@@ -132,7 +113,6 @@ export default class InstructorQuiz extends Vue {
 
 .question {
     &-wrapper {
-        padding-left: 24px;
     }
 }
 

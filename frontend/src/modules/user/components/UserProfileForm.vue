@@ -3,34 +3,13 @@
         class="user-profile-wrapper d-flex flex-md-row flex-column justify-content-between w-100"
     >
         <div class="profile-image-wrapper">
-            <div class="w-100" v-if="userData.avatar">
+            <div class="w-100">
                 <img
                     class="profile-image w-100"
-                    :src="
-                        !isChangingAvatar ? userData.avatar : previewImagePath(thumbnail!!)
-                    "
+                    :src="defaultAvatarUrl"
                     alt=""
                 />
             </div>
-            <div
-                v-else
-                class="default-avatar profile-image d-flex align-items-center justify-content-center"
-                :style="{ 'background-color': defaultAvatarColor }"
-            >
-                <span>{{ defaultAvatarName }}</span>
-            </div>
-            <label class="upload-button" for="file-input">
-                <div class="camera-wrapper">
-                    <img src="@/assets/user/icons/camera.svg" alt="" />
-                </div>
-            </label>
-            <input
-                type="file"
-                class="d-none"
-                id="file-input"
-                @change="handleChangeProfileImage(($event.target as any)?.files)"
-                accept="image/*"
-            />
         </div>
         <div class="user-profile-form">
             <BaseInputText
@@ -90,11 +69,7 @@ import {
     showErrorNotificationFunction,
     showSuccessNotificationFunction,
 } from '@/common/helpers';
-import {
-    generateDefaultAvatarColor,
-    getFirstLetterOfName,
-} from '@/common/commonFunctions';
-import { IMAGE_EXTENSION_LIST } from '@/common/constants';
+import { generateGmailStyleAvatar } from '@/common/commonFunctions';
 import { userModule } from '../store/user.store';
 import { IUpdateUserData } from '../constants/user.interfaces';
 import { commonModule } from '@/modules/common/store/common.store';
@@ -104,11 +79,9 @@ import { IUserData } from '@/common/interfaces';
     components: {},
 })
 export default class UserProfileForm extends Vue {
-    isChangingAvatar = false;
     userForm = {} as IUpdateUserData;
     credentialError = '';
     passwordError = '';
-    thumbnail: File | null = null;
     get userData(): IUserData {
         return userModule.userData;
     }
@@ -124,12 +97,9 @@ export default class UserProfileForm extends Vue {
         }
     }
 
-    get defaultAvatarColor() {
-        return generateDefaultAvatarColor(this.userData?.username || '').trim();
-    }
-
-    get defaultAvatarName() {
-        return getFirstLetterOfName(this.userData?.username || '').trim();
+    get defaultAvatarUrl() {
+        const identifier = this.userData?.username || this.userData?.email || this.userData?.id || 'User';
+        return generateGmailStyleAvatar(identifier);
     }
 
     checkEmptyUsername() {
@@ -146,33 +116,6 @@ export default class UserProfileForm extends Vue {
         } else {
             this.passwordError = '';
         }
-    }
-
-    previewImagePath(file: File) {
-        if (!this.checkImageFormat(file.name)) {
-            showErrorNotificationFunction(this.$t('user.errors.invalidImage') as string);
-            this.isChangingAvatar = false;
-            return;
-        } else {
-            return URL.createObjectURL(file);
-        }
-    }
-
-    checkImageFormat(name: string) {
-        const fileParts: Array<string> = name.split(/[.]/);
-        if (!IMAGE_EXTENSION_LIST.includes(fileParts[fileParts.length - 1])) {
-            return false;
-        }
-        return true;
-    }
-
-    handleChangeProfileImage(files: File[]) {
-        this.thumbnail = files[0];
-        this.userForm.file = this.previewImagePath(this.thumbnail);
-        this.isChangingAvatar = true;
-        if (this.checkImageFormat(files[0].name)) {
-            showSuccessNotificationFunction('Success');
-        } else return;
     }
 
     async handleUpdateUser() {
@@ -198,9 +141,6 @@ export default class UserProfileForm extends Vue {
         if (this.userForm.currentPassword) {
             userData.currentPassword = this.userForm.currentPassword;
             formData.append('currentPassword', userData.currentPassword || '');
-        }
-        if (this.userForm.file) {
-            formData.append('file', this.thumbnail || '');
         }
         if (this.credentialError === '') {
             const response = await updateUserData(formData);
@@ -249,33 +189,6 @@ export default class UserProfileForm extends Vue {
         border-radius: 50%;
         border: 2px solid #888;
         aspect-ratio: 1 / 1;
-    }
-    .default-avatar {
-        cursor: pointer;
-        font-style: normal;
-        color: white;
-        text-align: center;
-        font-weight: 400;
-        font-size: 80px;
-    }
-    .upload-button {
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        position: absolute;
-        top: 80%;
-        right: 10%;
-        &:hover {
-            opacity: 0.88;
-        }
-    }
-    .camera-wrapper {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        padding: 6px;
-        background-color: #aaa;
-        border: 1px solid #888;
     }
 }
 

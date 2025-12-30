@@ -3,19 +3,11 @@
         <el-dropdown trigger="click" :hide-on-click="true">
             <div class="d-flex flex-row align-items-center" style="cursor: pointer">
                 <img
-                    v-if="userImage"
                     class="user-avatar"
                     width="50px"
-                    :src="userImage"
+                    :src="defaultAvatarUrl"
                     alt=""
                 />
-                <div
-                    v-else
-                    class="user-avatar default-avatar d-flex justify-content-center align-items-center"
-                    :style="{ 'background-color': defaultAvatarColor }"
-                >
-                    <span>{{ defaultAvatarName }}</span>
-                </div>
                 <span class="name text-ellipsis">{{ userName || 'Anonymous' }}</span>
             </div>
             <template #dropdown>
@@ -90,10 +82,7 @@ import { PageName } from '@/common/constants';
 import { IUserData } from '@/common/interfaces';
 import { commonModule } from '@/modules/common/store/common.store';
 import { loginModule } from '@/modules/auth/store/login.store';
-import {
-    generateDefaultAvatarColor,
-    getFirstLetterOfName,
-} from '@/common/commonFunctions';
+import { generateGmailStyleAvatar } from '@/common/commonFunctions';
 import { userModule } from '@/modules/user/store/user.store';
 import localStorageTokenService from '@/common/tokenService';
 import socketInstance from '@/plugins/socket';
@@ -111,16 +100,9 @@ export default class HeaderMenuAccount extends Vue {
         return this.userData.username;
     }
 
-    get userImage() {
-        return this.userData.avatar;
-    }
-
-    get defaultAvatarColor() {
-        return generateDefaultAvatarColor(this.userData?.username || '').trim();
-    }
-
-    get defaultAvatarName() {
-        return getFirstLetterOfName(this.userData?.username || '').trim();
+    get defaultAvatarUrl() {
+        const identifier = this.userData?.username || this.userData?.email || this.userData?.id || 'User';
+        return generateGmailStyleAvatar(identifier);
     }
 
     async created() {
@@ -221,15 +203,6 @@ export default class HeaderMenuAccount extends Vue {
 
 .course {
     display: none !important;
-}
-
-.default-avatar {
-    cursor: pointer;
-    font-style: normal;
-    color: white;
-    text-align: center;
-    font-weight: 400;
-    font-size: 22px;
 }
 
 .text-ellipsis {

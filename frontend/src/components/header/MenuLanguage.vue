@@ -67,7 +67,7 @@ export default class MenuLanguage extends Vue {
 .select-language {
     padding: 10px 20px;
     border-radius: 10px;
-    background: #e9e9e9;
+    background: transparent;
 }
 .dropdown-selected,
 .dropdown-item-text {

@@ -273,7 +273,6 @@ export async function createQuiz(
         name: string;
         startTime: string;
         duration: number;
-        shown?: boolean;
         questionList: Array<{
             id?: number;
             name: string;
@@ -322,7 +321,7 @@ export async function updateQuizBulk(
     courseId: number,
     quizId: number,
     data: {
-        quiz: { name: string; duration: string; shown?: boolean };
+        quiz: { name: string; duration: string };
         questions: Array<{
             id?: number;
             name: string;

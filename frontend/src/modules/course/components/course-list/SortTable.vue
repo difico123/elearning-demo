@@ -129,8 +129,8 @@ export default class SortTable extends Vue {
 }
 .sort-table {
     &-wrapper {
-        padding: 10px 32px;
-        background-color: #ffffffdd;
+        padding: 10px 0;
+        background-color: transparent;
         border-radius: 12px;
         color: #000;
         font-weight: bold;

@@ -152,10 +152,12 @@ export const course = {
     topic: {
         showVideo: 'Nhấn vào đây để xem video',
         hideVideo: 'Nhấn vào đây để ẩn video',
+        addTopic: 'Thêm chủ đề',
         action: {
+            addTopic: 'Thêm chủ đề',
+            editTitle: 'Sửa chủ đề',
             edit: 'Sửa chủ đề',
             createTitle: 'Thêm chủ đề mới',
-            editTitle: 'Sửa chủ đề',
         },
         form: {
             title: 'Tên chủ đề',

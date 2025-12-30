@@ -45,7 +45,7 @@
             >
                 <div style="align-self: end">
                     <img
-                        :src="message.avatar"
+                        :src="getDefaultAvatar(message.username || message.email || message.userId || 'User')"
                         width="35"
                         style="border-radius: 50%"
                         alt=""
@@ -88,6 +88,7 @@
 <script lang="ts">
 import { DEFAULT_FIRST_PAGE } from '@/common/constants';
 import { showErrorNotificationFunction } from '@/common/helpers';
+import { generateGmailStyleAvatar } from '@/common/commonFunctions';
 import { UserCourseStatus } from '@/modules/common/constants/common.interfaces';
 import { commonModule } from '@/modules/common/store/common.store';
 import { userModule } from '@/modules/user/store/user.store';
@@ -136,6 +137,10 @@ export default class ChatPopup extends Vue {
 
     isOwnMessage(message: IMessageDetail) {
         return message.userId === this.userId;
+    }
+
+    getDefaultAvatar(identifier: string) {
+        return generateGmailStyleAvatar(identifier || 'User');
     }
 
     closeChatPopup() {

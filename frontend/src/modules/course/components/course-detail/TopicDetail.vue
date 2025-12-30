@@ -1,5 +1,5 @@
 <template>
-    <div class="topic-detail-wrapper d-flex bg-white flex-column w-100 gap-3">
+    <div class="topic-detail-wrapper d-flex flex-column w-100 gap-3">
         <div
             class="title-wrapper d-flex flex-sm-row flex-column align-items-center justify-content-between"
         >
@@ -7,7 +7,9 @@
             <div
                 class="edit-topic-button"
                 @click="handleEditTopic"
-                v-if="userRole === SystemRole.INSTRUCTOR"
+                v-if="
+                    userRole === SystemRole.INSTRUCTOR && hasTopics && selectedTopic?.id
+                "
             >
                 {{ $t('course.topic.action.edit') }}
             </div>
@@ -47,6 +49,17 @@
                     : $t('course.errors.instructorGetTopicError')
             "
         />
+        <div
+            v-if="userRole === SystemRole.INSTRUCTOR && !hasTopics"
+            class="add-topic-button-wrapper d-flex justify-content-center mt-3"
+        >
+            <div
+                class="add-topic-button d-flex align-items-center gap-2"
+                @click="handleAddTopic"
+            >
+                <span>{{ $t('course.topic.addTopic') }}</span>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -73,6 +86,14 @@ export default class TopicDetail extends Vue {
         return courseModule.selectedTopic;
     }
 
+    get topicList() {
+        return courseModule.topicList;
+    }
+
+    get hasTopics() {
+        return this.topicList && this.topicList.length > 0;
+    }
+
     showTopicVideo() {
         courseModule.toggleShowTopicVideo(true);
     }
@@ -84,12 +105,21 @@ export default class TopicDetail extends Vue {
         courseModule.toggleShowTopicFormPopup(true);
         courseModule.setTopicFormPopupMode('edit');
     }
+
+    handleAddTopic() {
+        courseModule.toggleShowTopicFormPopup(true);
+        courseModule.setTopicFormPopupMode('create');
+    }
 }
 </script>
 <style lang="scss" scoped>
 .topic-detail {
     &-wrapper {
         padding: 4vh 3vw;
+        background-image: url('@/assets/common/images/light-client-background.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
     }
 
     &-title {
@@ -112,6 +142,21 @@ export default class TopicDetail extends Vue {
 }
 
 .edit-topic-button {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    line-height: 24px !important;
+    border-radius: 6px;
+    padding: 8px 20px;
+    transition: all 0.44s ease 0s;
+    background-color: $color-violet-new-1;
+    color: $color-white;
+    cursor: pointer;
+    &:hover {
+        background-color: $color-violet-new-opacity-50;
+    }
+}
+
+.add-topic-button {
     font-size: 17px !important;
     font-weight: 600 !important;
     line-height: 24px !important;

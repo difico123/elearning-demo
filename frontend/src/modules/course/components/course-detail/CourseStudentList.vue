@@ -27,7 +27,12 @@
         >
             <span class="student counter" style="width: 30px">{{ index + 1 }}</span>
             <div class="student avatar">
-                <img :src="student.avatar" width="40" alt="" style="border-radius: 50%" />
+                <img
+                    :src="getDefaultAvatar(student.username || student.email || student.id)"
+                    width="40"
+                    alt=""
+                    style="border-radius: 50%"
+                />
             </div>
             <span class="student username">{{ student.username }}</span>
             <span class="student email">{{ student.email }}</span>
@@ -91,6 +96,7 @@ import {
     showErrorNotificationFunction,
     showSuccessNotificationFunction,
 } from '@/common/helpers';
+import { generateGmailStyleAvatar } from '@/common/commonFunctions';
 import { IGetListDefaultParams } from '@/common/interfaces';
 import {
     UserActionDto,
@@ -178,6 +184,10 @@ export default class CourseStudentList extends Vue {
 
     async handleApplyFilter() {
         this.initCourseStudentList();
+    }
+
+    getDefaultAvatar(identifier: string) {
+        return generateGmailStyleAvatar(identifier || 'User');
     }
 
     async created() {

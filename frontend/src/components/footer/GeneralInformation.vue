@@ -7,29 +7,10 @@
                 <img :src="require('@/assets/common/images/logo.png')" class="me-2" />
             </div></router-link
         >
-        <div>
-            <ul class="p-0 mt-4 mb-2">
-                <li class="item">
-                    <a class="d-flex" target="_blank" :href="UETAddress">
-                        <div>
-                            <img
-                                class="px-2"
-                                :src="require('@/assets/common/icons/footer/map.svg')"
-                            />
-                        </div>
-                        <span>{{ $t('common.footer.address') }}</span>
-                    </a>
-                </li>
-                <li class="item">
-                    <a class="d-flex" href="mailto:syntaxerror@vnu.edu.vn">
-                        <img
-                            class="px-2"
-                            :src="require('@/assets/common/icons/footer/mail.svg')"
-                        />
-                        <span>{{ $t('common.footer.email') }}</span>
-                    </a>
-                </li>
-            </ul>
+        <div class="info-content">
+            <p class="info-text">Số 4 ngõ 22 Trung Kính, Cầu Giấy, Hà Nội</p>
+            <p class="info-text">Hotline tư vấn giải pháp : 092.6886.855</p>
+            <p class="info-text">Hotline hỗ trợ kỹ thuật : 0966.966.051/052/053</p>
         </div>
     </div>
 </template>
@@ -49,9 +30,15 @@ export default class GeneralInformation extends Vue {
 }
 </script>
 <style lang="scss" scoped>
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
 .general-information {
     text-decoration: none;
-    color: $color-white;
+    color: $color-gray-900;
 }
 
 .title {
@@ -61,18 +48,16 @@ export default class GeneralInformation extends Vue {
     line-height: 32px;
 }
 
-.item {
-    max-width: 280px;
-    margin-top: 9px;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 22px;
-    list-style: none;
+.info-content {
+    display: flex;
+    flex-direction: column;
+}
 
-    cursor: pointer;
-    a {
-        text-decoration: none;
-        color: $color-gray-04;
-    }
+.info-text {
+    margin: 0;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    color: $color-gray-500;
 }
 </style>

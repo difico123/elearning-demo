@@ -135,6 +135,59 @@ export function generateDefaultAvatarColor(name: string) {
     return DEFAULT_AVATAR_COLORS[getHashOfString(name) % 6];
 }
 
+/**
+ * Generate a Gmail-style avatar URL using UI Avatars API
+ * @param identifier - User ID, email, or username
+ * @returns URL to Gmail-style avatar with initials
+ */
+export function generateGmailStyleAvatar(identifier: string): string {
+    // Generate initials from the identifier
+    // If it's an email, extract the part before @, otherwise use the identifier
+    let name = identifier;
+    if (identifier.includes('@')) {
+        name = identifier.split('@')[0];
+    }
+    if (identifier.includes(' ')) {
+        name = identifier.split(' ')[0].charAt(0).toUpperCase() + identifier.split(' ')[1].charAt(0).toUpperCase();
+    }
+
+    // Extract initials (first 2 characters, uppercase)
+    const initials = name.substring(0, 2).toUpperCase();
+
+    // Generate a consistent color based on the identifier
+    // This ensures the same user always gets the same color
+    const colors = [
+        '0d8abc', // Blue
+        'e91e63', // Pink
+        '9c27b0', // Purple
+        '673ab7', // Deep Purple
+        '3f51b5', // Indigo
+        '2196f3', // Light Blue
+        '00bcd4', // Cyan
+        '009688', // Teal
+        '4caf50', // Green
+        '8bc34a', // Light Green
+        'cddc39', // Lime
+        'ffeb3b', // Yellow
+        'ffc107', // Amber
+        'ff9800', // Orange
+        'ff5722', // Deep Orange
+        '795548', // Brown
+        '607d8b', // Blue Grey
+        '9e9e9e', // Grey
+    ];
+
+    // Use identifier as seed for consistent color selection
+    const hash = getHashOfString(identifier);
+    const colorIndex = hash % colors.length;
+    const backgroundColor = colors[colorIndex];
+
+    // Generate Gmail-style avatar using UI Avatars API
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        initials,
+    )}&background=${backgroundColor}&color=fff&size=128&bold=true&font-size=0.5`;
+}
+
 export const yyyymmddFormat = (date: Date | string) => {
     return moment(date).format('YYYY-MM-DD');
 };

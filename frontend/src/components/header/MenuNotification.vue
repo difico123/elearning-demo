@@ -38,7 +38,7 @@
                                     }"
                                 >
                                     <img
-                                        :src="noti.avatar"
+                                        :src="getDefaultAvatar(noti.username || noti.email || noti.userId || 'User')"
                                         alt=""
                                         class="avt"
                                         width="40"
@@ -106,6 +106,7 @@ import {
     showErrorNotificationFunction,
     showSuccessNotificationFunction,
 } from '@/common/helpers';
+import { generateGmailStyleAvatar } from '@/common/commonFunctions';
 import { getNotificationList, readNotification } from '@/modules/common/services/common';
 import { commonModule } from '@/modules/common/store/common.store';
 import {
@@ -176,6 +177,10 @@ export default class MenuNotification extends Vue {
         }
 
         commonModule.setJoinCourseNotification(notificationId);
+    }
+
+    getDefaultAvatar(identifier: string) {
+        return generateGmailStyleAvatar(identifier || 'User');
     }
 
     get getNotification() {

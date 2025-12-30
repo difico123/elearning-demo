@@ -9,14 +9,6 @@
             <span v-if="!isCollapsed" class="text-ellipsis">{{
                 $t('course.topicSidebar.title')
             }}</span>
-            <img
-                v-if="userRole === SystemRole.INSTRUCTOR"
-                style="cursor: pointer"
-                src="@/assets/course/icons/plus.svg"
-                width="25"
-                alt=""
-                @click="handleAddTopic"
-            />
         </div>
         <div
             v-for="(topic, index) in topicList"
@@ -30,6 +22,18 @@
                 {{ '.\xa0' }}
                 {{ topic?.name }}
             </div>
+        </div>
+        <div
+            v-if="
+                userRole === SystemRole.INSTRUCTOR &&
+                topicList?.length > 0
+            "
+            class="button add-topic d-flex align-items-center justify-content-center gap-2"
+            :class="{ collapsed: isCollapsed }"
+            @click="handleAddTopic"
+        >
+            <img src="@/assets/course/icons/plus.svg" width="18" alt="" />
+            <span v-if="!isCollapsed">{{ $t('course.topic.addTopic') }}</span>
         </div>
         <div
             class="button d-flex no-topic"
@@ -147,9 +151,10 @@ export default class CourseSidebar extends Vue {
     }
 }
 .add-topic {
-    background-color: #39e75f;
+    background-color: $color-violet-new;
     &:hover {
-        background-color: #83f28f;
+        background-color: $color-violet-new;
+        opacity: 0.9;
     }
 }
 .no-topic {

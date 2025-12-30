@@ -45,13 +45,16 @@ export default class MobileApp extends Vue {
 <style lang="scss" scoped>
 .title {
     height: 44px;
-    font-weight: 600;
-    font-size: 20px;
-    line-height: 32px;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 27px;
+    color: $color-gray-900;
 }
 
 .body {
-    color: $color-gray-04;
+    color: $color-gray-500;
+    font-size: 16px;
+    line-height: 24px;
 }
 
 .body-img:hover {

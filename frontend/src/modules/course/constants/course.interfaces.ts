@@ -111,7 +111,6 @@ export interface IQuiz {
     id?: number;
     topicId?: number;
     name?: string;
-    shown?: boolean;
     startTime?: string;
     duration?: string;
 }
@@ -133,7 +132,6 @@ export interface IAnswer {
 export interface IQuizDetail {
     id?: number;
     name?: string;
-    shown?: boolean;
     isEdit?: boolean;
     topicId?: number;
     startTime?: string;

@@ -53,9 +53,10 @@ export default class ContactUs extends Vue {
 <style lang="scss" scoped>
 .title {
     height: 44px;
-    font-weight: 600;
-    font-size: 20px;
-    line-height: 32px;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 27px;
+    color: $color-gray-900;
 }
 
 .contact-us-items:hover {

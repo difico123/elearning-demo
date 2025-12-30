@@ -85,7 +85,7 @@ export default class CourseListItem extends Vue {
 .course-list-table {
     &-wrapper {
         padding: 10px 32px;
-        background-color: #ffffffdd;
+        background-color: transparent;
         border-radius: 12px;
         cursor: pointer;
         color: #000;

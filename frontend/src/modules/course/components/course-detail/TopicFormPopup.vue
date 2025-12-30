@@ -4,6 +4,7 @@
         z-index="600"
         v-model="isShowTopicFormPopup"
         @close="closeTopicFormPopup"
+        @opened="handleDialogOpen"
         :modal="false"
         :title="
             isCreate
@@ -26,7 +27,7 @@
                     :placeholder="$t('course.topic.form.description')"
                     v-model:value="selectedTopic.description"
                 />
-                <div class="d-flex flex-row gap-3 justify-content-start">
+                <!-- <div class="d-flex flex-row gap-3 justify-content-start">
                     <label class="fw-bold text-start mb-2 d-flex align-items-center pt-4">
                         {{ $t('course.topic.form.video') }}
                     </label>
@@ -35,7 +36,7 @@
                             <img src="@/assets/course/icons/upload.png" alt="" />
                         </div>
                     </label>
-                </div>
+                </div> -->
                 <input
                     type="file"
                     accept="video/*"
@@ -43,7 +44,13 @@
                     class="d-none"
                     @change="handleFileUpload($event)"
                 />
-                <video id="video-preview" controls class="pt-2" v-if="video != ''" />
+                <video
+                    id="video-preview"
+                    controls
+                    class="pt-2"
+                    v-if="video != ''"
+                    :src="typeof video === 'string' ? video : ''"
+                />
             </div>
             <div @focus.stop class="form-right" style="flex: 1 1 0">
                 <label class="fw-bold text-start mb-2 d-flex align-items-center">
@@ -91,13 +98,13 @@ import Editor from '@tinymce/tinymce-vue';
     components: { Editor },
 })
 export default class TopicFormPopup extends Vue {
-    video: ''; 
+    video: string | File = '';
     selectedTopic: ITopicData = {};
 
     get toolbarInit() {
         return {
             plugins:
-                'anchor autolink charmap codesample emoticons image link lists media searchreplace table wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker permanentpen powerpaste advtable advcode editimage tableofcontents footnotes mergetags autocorrect typography inlinecss',
+                'anchor autolink charmap codesample emoticons image link lists media searchreplace table wordcount linkchecker',
             toolbar:
                 'insertfile undo redo | fontselect fontsizeselect | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | forecolor backcolor',
             toolbar_mode: 'sliding',
@@ -120,34 +127,100 @@ export default class TopicFormPopup extends Vue {
         return this.popupMode === 'create';
     }
 
+    handleDialogOpen() {
+        console.log('handleDialogOpen called (from @opened event)');
+        // This fires when the dialog is fully opened - ensure data is loaded
+        this.$nextTick(() => {
+            console.log('Calling updateSelectedTopic from handleDialogOpen');
+            this.updateSelectedTopic();
+        });
+    }
+
     mounted() {
+        console.log('TopicFormPopup mounted');
         // Watch for popup visibility changes
         this.$watch(
             () => this.isShowTopicFormPopup,
-            (newVal: boolean) => {
+            (newVal: boolean, oldVal: boolean) => {
+                console.log('isShowTopicFormPopup changed:', { newVal, oldVal });
                 if (newVal) {
-                    this.updateSelectedTopic();
+                    this.$nextTick(() => {
+                        console.log('Calling updateSelectedTopic from isShowTopicFormPopup watcher');
+                        this.updateSelectedTopic();
+                    });
                 }
-            }
+            },
         );
         // Watch for mode changes
         this.$watch(
             () => this.popupMode,
-            () => {
+            (newVal: string, oldVal: string) => {
+                console.log('popupMode changed:', { newVal, oldVal, isShow: this.isShowTopicFormPopup });
                 if (this.isShowTopicFormPopup) {
-                    this.updateSelectedTopic();
+                    this.$nextTick(() => {
+                        console.log('Calling updateSelectedTopic from popupMode watcher');
+                        this.updateSelectedTopic();
+                    });
                 }
-            }
+            },
         );
     }
 
     updateSelectedTopic() {
+        console.log('updateSelectedTopic called', {
+            isCreate: this.isCreate,
+            selectedTopic: courseModule.selectedTopic,
+            popupMode: this.popupMode,
+        });
+
         if (this.isCreate) {
-            this.selectedTopic = {};
+            // Reset to empty for create mode
+            this.selectedTopic.name = '';
+            this.selectedTopic.description = '';
+            this.selectedTopic.content = '';
+            this.selectedTopic.video = '';
+            this.selectedTopic.id = undefined;
+            this.selectedTopic.courseId = undefined;
             this.video = '';
         } else {
-            this.selectedTopic = Object.assign({}, courseModule.selectedTopic);
+            // Edit mode - copy data from store
+            const topic = courseModule.selectedTopic;
+            console.log('Topic from store:', topic);
+            
+            if (!topic || !topic.id) {
+                console.warn('No topic selected or topic has no id');
+                this.selectedTopic.name = '';
+                this.selectedTopic.description = '';
+                this.selectedTopic.content = '';
+                this.selectedTopic.video = '';
+                this.video = '';
+                return;
+            }
+            
+            // Update properties directly to maintain reactivity
+            this.selectedTopic.id = topic.id;
+            this.selectedTopic.courseId = topic.courseId;
+            this.selectedTopic.name = topic.name || '';
+            this.selectedTopic.description = topic.description || '';
+            this.selectedTopic.content = topic.content || '';
+            this.selectedTopic.video = topic.video || '';
+            
+            console.log('Updated selectedTopic:', this.selectedTopic);
+            
+            // If there's an existing video URL, show it in the preview
+            if (topic.video) {
+                this.video = topic.video;
+                this.$nextTick(() => {
+                    this.previewExistingVideo();
+                });
+            } else {
+                this.video = '';
+            }
         }
+    }
+
+    previewExistingVideo() {
+        this.previewVideo();
     }
 
     closeTopicFormPopup() {
@@ -161,11 +234,17 @@ export default class TopicFormPopup extends Vue {
 
     previewVideo() {
         let video: any = document.getElementById('video-preview');
-        let reader = new FileReader();
-        reader.readAsDataURL(this.video as any);
-        reader.addEventListener('load', function () {
-            video.src = reader.result;
-        });
+        if (!video) return;
+
+        if (this.video instanceof File) {
+            let reader = new FileReader();
+            reader.readAsDataURL(this.video);
+            reader.addEventListener('load', function () {
+                video.src = reader.result;
+            });
+        } else if (typeof this.video === 'string') {
+            video.src = this.video;
+        }
     }
 
     async reloadTopicList() {
@@ -229,17 +308,11 @@ export default class TopicFormPopup extends Vue {
         } else {
             const topicId = this.selectedTopic.id;
             if (!topicId) {
-                showErrorNotificationFunction(
-                    this.$t('course.errors.topic.editTopic'),
-                );
+                showErrorNotificationFunction(this.$t('course.errors.topic.editTopic'));
                 commonModule.setLoadingIndicator(false);
                 return;
             }
-            const response = await updateTopic(
-                formData,
-                courseId,
-                topicId as number,
-            );
+            const response = await updateTopic(formData, courseId, topicId as number);
             if (response.success) {
                 showSuccessNotificationFunction(
                     this.$t('course.success.topic.updateTopic'),

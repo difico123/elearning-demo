@@ -6,10 +6,13 @@
                     <GeneralInformation />
                 </div>
                 <div>
-                    <ContactUs />
+                    <Products />
+                </div>
+                <div>
+                    <Solutions />
                 </div>
                 <div class="break">
-                    <MobileApp />
+                    <Resources />
                 </div>
             </div>
         </div>
@@ -18,19 +21,19 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import GeneralInformation from './GeneralInformation.vue';
-import ContactUs from './ContactUs.vue';
-import MobileApp from './MobileApp.vue';
+import Products from './Products.vue';
+import Solutions from './Solutions.vue';
+import Resources from './Resources.vue';
 
 @Options({
-    components: { GeneralInformation, ContactUs, MobileApp },
+    components: { GeneralInformation, Products, Solutions, Resources },
 })
 export default class Footer extends Vue {}
 </script>
 <style lang="scss" scoped>
 .footer {
-    padding: 36px 0 50px;
-    color: $color-white;
-    background-color: $color-gray-01;
+    padding: 6vh 0;
+    background-color: $color-white;
 }
 
 .footer-wrapper {

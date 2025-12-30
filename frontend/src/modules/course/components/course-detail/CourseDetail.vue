@@ -131,4 +131,8 @@ export default class CourseDetail extends Vue {
     }
 }
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+    .course-detail {
+        min-height: 66vh;
+    }
+</style>
