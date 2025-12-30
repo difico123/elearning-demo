@@ -23,6 +23,9 @@ export default class NoStyleLayout extends Vue {}
 <style lang="scss" scoped>
 .no-style-layout {
     min-height: calc(100vh - 90px - 235px);
-    background-color: $pale-blue;
+    background-image: url('@/assets/common/images/light-client-background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 </style>

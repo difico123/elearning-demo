@@ -25,7 +25,10 @@ export default class CommonPageLayout extends Vue {
 .page-wrapper {
     padding: 0 24px;
     height: 100vh;
-    background-color: $color-gray-05;
+    background-image: url('@/assets/common/images/light-client-background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .back-button {

@@ -4,7 +4,7 @@
             <div class="header-content d-flex flex-row justify-content-between w-100">
                 <div class="d-flex flex-row align-items-center">
                     <Logo />
-                    <HeaderTitle />
+                    <!-- <HeaderTitle /> -->
                 </div>
                 <div
                     v-if="getLoggedIn"

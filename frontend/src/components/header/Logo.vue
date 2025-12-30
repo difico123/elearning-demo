@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex flex-row align-items-center">
         <router-link class="text-decoration-none" :to="{ name: PageName.LANDING_PAGE }">
-            <img class="logo" src="@/assets/common/images/logo2.svg" alt="" />
+            <img class="logo" src="@/assets/common/images/logo.png" alt="" />
         </router-link>
     </div>
 </template>
@@ -18,8 +18,7 @@ export default class HeaderLogo extends Vue {
 
 <style lang="scss" scoped>
 .logo {
-    width: 56px;
-    height: 56px;
+    width: 100px;
 }
 
 .title-container {

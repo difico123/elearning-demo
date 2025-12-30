@@ -55,7 +55,10 @@ export default class SelectRolePage extends Vue {
 .select-role-container {
     padding: 13vh 22vw;
     height: 100vh;
-    background: $color-gray-05;
+    background-image: url('@/assets/common/images/light-client-background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .select-role-title {

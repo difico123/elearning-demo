@@ -4,8 +4,7 @@
             class="general-information"
             :to="{ name: PageName.GUEST_LANDING_PAGE }"
             ><div class="title d-flex align-items-center">
-                <img :src="require('@/assets/common/images/logo2.svg')" class="me-2" />
-                {{ $t('common.footer.appName') }}
+                <img :src="require('@/assets/common/images/logo.png')" class="me-2" />
             </div></router-link
         >
         <div>

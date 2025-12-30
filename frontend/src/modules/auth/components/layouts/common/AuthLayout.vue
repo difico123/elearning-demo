@@ -46,6 +46,10 @@ export default class AuthLayout extends Vue {}
 }
 .right-container {
     padding: 0;
+    background-image: url('@/assets/common/images/light-client-background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 @media only screen and (max-width: map-get($map: $grid-breakpoints, $key: lg)) {
