@@ -14,7 +14,6 @@ export interface BulkQuizInsertDto {
   name: string;
   startTime: string;
   duration: number;
-  shown?: boolean;
   questionList: QuestionItem[];
 }
 
@@ -60,7 +59,6 @@ export interface BulkQuizUpdateDto {
   quiz: {
     name: string;
     duration: string;
-    shown?: boolean;
   };
   questions: Array<{
     id?: number; // undefined = new question

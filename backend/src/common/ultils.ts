@@ -127,23 +127,53 @@ export function hasFile(path: string) {
   return false;
 }
 
-export const generateAvatar = (identify: string, stt?: number) => {
-  const name = [
-    'croodles',
-    'micah',
-    'avataaars',
-    'adventurer',
-    'big-smile',
-    'miniavs',
-    'open-peeps',
-    'personas',
-  ];
-  const index = stt % name.length;
-  const randomIndex = Math.floor(Math.random() * name.length);
-  const avatarApi = (avatarName: string, id: string) =>
-    `https://avatars.dicebear.com/api/${avatarName}/${id}.svg`;
+export const generateAvatar = (identify: string, _stt?: number) => {
+  // Generate initials from the identifier
+  // If it's an email, extract the part before @, otherwise use the identifier
+  let name = identify;
+  if (identify.includes('@')) {
+    name = identify.split('@')[0];
+  }
 
-  return avatarApi(name[index || randomIndex], identify);
+  // Extract initials (first 2 characters, uppercase)
+  const initials = name.substring(0, 2).toUpperCase();
+
+  // Generate a consistent color based on the identifier
+  // This ensures the same user always gets the same color
+  const colors = [
+    '0d8abc', // Blue
+    'e91e63', // Pink
+    '9c27b0', // Purple
+    '673ab7', // Deep Purple
+    '3f51b5', // Indigo
+    '2196f3', // Light Blue
+    '00bcd4', // Cyan
+    '009688', // Teal
+    '4caf50', // Green
+    '8bc34a', // Light Green
+    'cddc39', // Lime
+    'ffeb3b', // Yellow
+    'ffc107', // Amber
+    'ff9800', // Orange
+    'ff5722', // Deep Orange
+    '795548', // Brown
+    '607d8b', // Blue Grey
+    '9e9e9e', // Grey
+  ];
+
+  // Use identifier as seed for consistent color selection
+  let hash = 0;
+  for (let i = 0; i < identify.length; i++) {
+    hash = identify.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colorIndex = Math.abs(hash) % colors.length;
+  const backgroundColor = colors[colorIndex];
+
+  // Generate Gmail-style avatar using UI Avatars API
+  // Format: https://ui-avatars.com/api/?name=Initials&background=Color&color=fff&size=128&bold=true
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    initials,
+  )}&background=${backgroundColor}&color=fff&size=128&bold=true&font-size=0.5`;
 };
 
 export const rmvideo = (filename: string) => {

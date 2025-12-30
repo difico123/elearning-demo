@@ -43,7 +43,7 @@ export class QuizService {
   }
 
   async saveQuizBulk(quizBulk: BulkQuizInsertDto, topicId: number) {
-    const { questionList, name, startTime, shown, duration } = quizBulk;
+    const { questionList, name, startTime, duration } = quizBulk;
 
     // Validate quiz has at least 1 question
     if (!questionList || questionList.length === 0) {
@@ -96,7 +96,6 @@ export class QuizService {
       topicId: +topicId,
       courseId: topic.courseId,
       name,
-      shown,
       startTime: timeStampToMysql(startTime),
       duration: +duration,
     };
@@ -170,12 +169,8 @@ export class QuizService {
         }
       }
 
-      let show: { shown?: boolean } = {};
-      show = !!studentId && {
-        shown: true,
-      };
       let quiz: BulkQuizResponseDto[] = await this.quiz.find({
-        where: { topicId: topicId, ...(courseId ? { courseId } : {}), ...show },
+        where: { topicId: topicId, ...(courseId ? { courseId } : {}) },
       });
       quiz = await Promise.all(
         quiz.map(async (quizItem) => {
@@ -510,9 +505,6 @@ export class QuizService {
         name: data.quiz.name,
         duration: +data.quiz.duration,
       };
-      if (data.quiz.shown !== undefined) {
-        quizUpdate.shown = data.quiz.shown;
-      }
       await this.quiz.update(quizId, quizUpdate);
 
       // Delete removed answers first (to avoid foreign key constraints)

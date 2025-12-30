@@ -40,10 +40,14 @@ export class ValidationPipe implements PipeTransform {
   }
   async transform(value, metadata: ArgumentMetadata) {
     if (metadata.type === this.paramType) {
-      const { error } = this.schema.validate(value);
+      const { error, value: validatedValue } = this.schema.validate(value, {
+        abortEarly: false,
+        stripUnknown: false,
+      });
       if (error) {
         throw new BadRequestException({ errors: error.details });
       }
+      return validatedValue;
     }
     return value;
   }

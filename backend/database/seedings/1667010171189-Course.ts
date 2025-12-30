@@ -5,6 +5,7 @@ export class Course1667010171189 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     const items = [
       {
+        id: 1,
         name: 'Khóa học Web căn bản (HTML - CSS - Javascript)',
         description: 'Dành cho những học viên có đam mê lập trình web',
         categoryId: 3,

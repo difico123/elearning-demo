@@ -78,16 +78,6 @@ export class AppController {
     return new StreamableFile(stream);
   }
 
-  @Post('avatar')
-  @UseInterceptors(LocalFilesInterceptor(imageParams('avatar')))
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'A new avatar for the user',
-  })
-  async addAvatar(@UploadedFile() file: Express.Multer.File) {
-    return file;
-  }
-
   @Post('video')
   @UseInterceptors(LocalFilesInterceptor(videoParams))
   @ApiConsumes('multipart/form-data')

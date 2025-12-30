@@ -36,7 +36,6 @@ const bulkQuizUpdateSchema = Joi.object()
       .keys({
         name: Joi.string().min(1).required(),
         duration: Joi.alternatives().try(Joi.string(), Joi.number()).required(),
-        shown: Joi.boolean().optional(),
       })
       .required(),
     questions: Joi.array()
@@ -47,8 +46,8 @@ const bulkQuizUpdateSchema = Joi.object()
           mark: Joi.number().required(),
           type: Joi.string()
             .valid('multiple_choice', 'single_choice', 'short_answer')
-            .default('multiple_choice')
-            .optional(),
+            .allow(null, '')
+            .default('multiple_choice'),
           answerList: Joi.array()
             .items(
               Joi.object().keys({

@@ -26,7 +26,6 @@ export class UserCourses1669059281163 implements MigrationInterface {
         startCourseTime: new Date('2022-10-05'),
         startBlockTime: new Date(),
         blockDuration: 45,
-        
       },
       {
         id: 4,
@@ -42,51 +41,33 @@ export class UserCourses1669059281163 implements MigrationInterface {
         status: UserCourseStatus.pending,
         startCourseTime: new Date('2022-10-05'),
       },
-      {
-        id: 6,
-        courseId: 3,
-        userId: '19020201',
-        status: UserCourseStatus.accepted,
-        startCourseTime: new Date('2022-10-05'),
-      },
-      {
-        id: 7,
-        courseId: 2,
-        userId: '19020201',
-        status: UserCourseStatus.reject,
-        startCourseTime: new Date('2022-09-05'),
-      },
+      // Removed duplicate: id 6 (userId: '19020201', courseId: 1) - already exists as id 1
+      // Removed duplicate: id 7 (userId: '19020201', courseId: 1) - already exists as id 1
       {
         id: 8,
-        courseId: 3,
+        courseId: 1,
         userId: '19020346',
         status: UserCourseStatus.accepted,
         startCourseTime: new Date('2022-09-05'),
       },
       {
         id: 9,
-        courseId: 2,
+        courseId: 1,
         userId: '19020166',
         status: UserCourseStatus.accepted,
         startCourseTime: new Date('2022-08-05'),
       },
       {
         id: 10,
-        courseId: 3,
+        courseId: 1,
         userId: '19020361',
         status: UserCourseStatus.accepted,
         startCourseTime: new Date('2022-08-05'),
       },
-      {
-        id: 11,
-        courseId: 4,
-        userId: '19020201',
-        status: UserCourseStatus.accepted,
-        startCourseTime: new Date('2022-08-05'),
-      },
+      // Removed duplicate: id 11 (userId: '19020201', courseId: 1) - already exists as id 1
       {
         id: 12,
-        courseId: 4,
+        courseId: 1,
         userId: '19020321',
         status: UserCourseStatus.accepted,
         startCourseTime: new Date('2022-08-05'),
@@ -120,7 +101,22 @@ export class UserCourses1669059281163 implements MigrationInterface {
         startCourseTime: new Date('2022-07-05'),
       },
     ];
-    await queryRunner.manager.getRepository(TableName.userCourse).insert(items);
+
+    // Use INSERT IGNORE to handle duplicate user-course combinations
+    for (const item of items) {
+      await queryRunner.query(
+        `INSERT IGNORE INTO ${TableName.userCourse} (id, courseId, userId, status, startCourseTime, startBlockTime, blockDuration, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        [
+          item.id,
+          item.courseId,
+          item.userId,
+          item.status,
+          item.startCourseTime,
+          item.startBlockTime || null,
+          item.blockDuration || null,
+        ],
+      );
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {}

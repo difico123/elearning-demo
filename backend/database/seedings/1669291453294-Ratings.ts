@@ -20,7 +20,7 @@ export class Ratings1669291453294 implements MigrationInterface {
         rating: '5',
       },
       {
-        userCourseId: 6,
+        userCourseId: 5,
         rating: '2',
       },
       {
@@ -36,11 +36,11 @@ export class Ratings1669291453294 implements MigrationInterface {
         rating: '5',
       },
       {
-        userCourseId: 11,
+        userCourseId: 12,
         rating: '5',
       },
       {
-        userCourseId: 12,
+        userCourseId: 13,
         rating: '5',
       },
     ];

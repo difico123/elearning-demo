@@ -93,7 +93,8 @@ export class AuthController {
       email,
       id,
     });
-    let avatar = generateAvatar(id);
+    // Use email for avatar generation (username not available yet during registration)
+    let avatar = generateAvatar(email || id);
     let hashpw = await this.authService.hashPw('12345678');
 
     await Promise.all([

@@ -1,4 +1,4 @@
-import { TableName, Role } from '../constant';
+import { TableName, Role, Provider } from '../constant';
 import { MigrationInterface, QueryRunner } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { generateAvatar } from '../../src/common/ultils';
@@ -443,13 +443,32 @@ export class User1667010084382 implements MigrationInterface {
         const hashedPassword = await bcrypt.hash(item.password, 8);
         return {
           ...item,
-          avatar: generateAvatar(item.id, index),
+          avatar: generateAvatar(item.username || item.email || item.id, index),
           password: hashedPassword,
         };
       }),
     );
 
-    await queryRunner.manager.getRepository(TableName.user).insert(itemDatas);
+    // Use INSERT IGNORE to handle duplicate emails gracefully
+    for (const item of itemDatas) {
+      await queryRunner.query(
+        `INSERT IGNORE INTO ${TableName.user} (id, username, email, password, verified, address, phone, avatar, role, provider, resetToken, expiredTokenTime, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        [
+          item.id,
+          item.username,
+          item.email,
+          item.password,
+          item.verified ? 1 : 0,
+          item.address,
+          item.phone,
+          item.avatar,
+          item.role,
+          item.provider || Provider.local,
+          item.resetToken || null,
+          item.expiredTokenTime || null,
+        ],
+      );
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {}

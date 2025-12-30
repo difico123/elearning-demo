@@ -68,7 +68,7 @@ export class Comments1668911845586 implements MigrationInterface {
       },
       {
         userId: '19020226',
-        sourceId: 2,
+        sourceId: 1,
         type: CommentType.course,
         comment: 'ăn cứt bố mày đi',
         time: new Date(),
